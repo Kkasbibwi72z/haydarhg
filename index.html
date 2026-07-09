@@ -2,129 +2,1563 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Snake</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Graffiti-Entfernung und Hochdruckreinigung für Fassaden, Zäune, Mauern, Einfahrten und Terrassen. Festpreisangebot innerhalb von 24 Stunden.">
+<title>Haydar Hochdruckreinigung</title>
 <style>
+  :root {
+    --bg: #edefee;
+    --bg-raised: #f7f8f7;
+    --ink: #161c20;
+    --ink-soft: #46545c;
+    --line: #c3ccc9;
+    --accent: #0c93b4;
+    --accent-bright: #3ecdeb;
+    --accent-ink: #ffffff;
+    --mist: #8fa3ab;
+    --hero-dirty: #4a4238;
+    --hero-clean: #d7dcda;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181c;
+      --bg-raised: #1a2126;
+      --ink: #e6ecee;
+      --ink-soft: #9fb0b8;
+      --line: #2c363c;
+      --accent: #3ecdeb;
+      --accent-ink: #0b2530;
+      --mist: #5d7078;
+      --hero-dirty: #3a342c;
+      --hero-clean: #b9c2bf;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12181c;
+    --bg-raised: #1a2126;
+    --ink: #e6ecee;
+    --ink-soft: #9fb0b8;
+    --line: #2c363c;
+    --accent: #3ecdeb;
+    --accent-ink: #0b2530;
+    --mist: #5d7078;
+    --hero-dirty: #3a342c;
+    --hero-clean: #b9c2bf;
+  }
+  :root[data-theme="light"] {
+    --bg: #edefee;
+    --bg-raised: #f7f8f7;
+    --ink: #161c20;
+    --ink-soft: #46545c;
+    --line: #c3ccc9;
+    --accent: #0c93b4;
+    --accent-ink: #ffffff;
+    --mist: #8fa3ab;
+    --hero-dirty: #4a4238;
+    --hero-clean: #d7dcda;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html, body { margin: 0; padding: 0; }
   body {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    background: #1e1e2e;
-    font-family: sans-serif;
-    color: #eee;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    font-size: 17px;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
-  h1 { margin-bottom: 4px; }
-  #score { margin-bottom: 10px; font-size: 18px; }
-  canvas {
-    background: #11111b;
-    border: 2px solid #444;
+  .display {
+    font-family: "Arial Black", "Arial Bold", Arial, sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.015em;
+    line-height: 1.02;
+    text-wrap: balance;
   }
-  #msg {
-    margin-top: 10px;
-    font-size: 16px;
-    min-height: 20px;
+  .mono {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--accent);
+    margin: 0 0 14px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible, input:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  /* ---------- Intro squeegee wipe ---------- */
+  .wipe { position: fixed; inset: 0; z-index: 200; pointer-events: none; overflow: hidden; }
+  .wipe div {
+    position: absolute; inset: -12%;
+    transform: skewX(-14deg) translateX(0);
+    will-change: transform;
+  }
+  .wipe-b {
+    background: linear-gradient(90deg, rgba(220,245,252,0) 70%, rgba(220,245,252,0.85) 92%, rgba(255,255,255,0.95));
+    animation: wipeOut 1.05s cubic-bezier(0.7, 0, 0.2, 1) 0.12s forwards;
+  }
+  .wipe-a {
+    background: linear-gradient(90deg, #06222c 55%, #0c93b4 88%, #3ecdeb);
+    animation: wipeOut 1.05s cubic-bezier(0.7, 0, 0.2, 1) forwards;
+  }
+  @keyframes wipeOut { to { transform: skewX(-14deg) translateX(-128%); } }
+  @media (prefers-reduced-motion: reduce) { .wipe { display: none; } }
+
+  /* ---------- Click ripple ---------- */
+  .click-ripple {
+    position: fixed; z-index: 190; pointer-events: none;
+    width: 10px; height: 10px; border-radius: 50%;
+    border: 2px solid var(--accent-bright);
+    transform: translate(-50%, -50%);
+    opacity: 0.5;
+    animation: clickRip 0.55s ease-out forwards;
+  }
+  @keyframes clickRip {
+    to { width: 74px; height: 74px; opacity: 0; }
+  }
+
+  /* ---------- Scroll reveal ---------- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal.d1 { transition-delay: 0.1s; }
+  .reveal.d2 { transition-delay: 0.2s; }
+  .reveal.d3 { transition-delay: 0.3s; }
+
+  /* ---------- Header ---------- */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    background: rgba(8, 14, 18, 0.55);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px; padding: 14px 24px; max-width: 1100px; margin: 0 auto;
+  }
+  .brand {
+    display: flex; align-items: baseline; gap: 10px;
+    text-decoration: none; color: #eef6f8;
+  }
+  .brand .display { font-size: 18px; letter-spacing: 0.02em; }
+  .brand .mono { font-size: 11px; color: var(--accent-bright); letter-spacing: 0.18em; }
+  .nav-links { display: flex; gap: 22px; }
+  .nav-links a {
+    color: rgba(238,246,248,0.75); text-decoration: none; font-size: 14px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 2px;
+    background: var(--accent-bright);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  .nav-links a:hover { color: var(--accent-bright); }
+  .nav-links a:hover::after { transform: scaleX(1); }
+  @media (max-width: 640px) { .nav-links { display: none; } }
+
+  /* ---------- Cinematic hero (deliberately dark in both themes: wet asphalt at night) ---------- */
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex; align-items: center;
+    background: #080e12;
+    color: #eef6f8;
+    overflow: hidden;
+  }
+  #heroFx { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .hero::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(130% 100% at 50% 50%, rgba(8,14,18,0) 55%, rgba(4,8,11,0.55) 100%),
+      linear-gradient(180deg, rgba(8,14,18,0.55) 0%, rgba(8,14,18,0) 30%);
+  }
+  .hero-content {
+    position: relative; z-index: 2;
+    max-width: 1100px; margin: 0 auto; padding: 120px 24px 110px;
+    width: 100%;
+    will-change: transform;
+  }
+  .hero h1 {
+    font-size: clamp(48px, 8vw, 104px); margin: 0 0 24px;
+    text-shadow: 0 4px 40px rgba(0,0,0,0.6);
+  }
+  .hero h1 .jet {
+    color: var(--accent-bright);
+    background: linear-gradient(105deg, #2fbfe2 0%, #a5ecfb 24%, #3ecdeb 48%, #8fe4f8 72%, #2fbfe2 100%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 26px rgba(62,205,235,0.45));
+    animation: jetShimmer 6s linear infinite;
+  }
+  @keyframes jetShimmer { to { background-position: -220% 0; } }
+  @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+    .hero h1 .jet { color: var(--accent-bright); background: none; -webkit-text-fill-color: currentColor; }
+  }
+  @media (prefers-reduced-motion: reduce) { .hero h1 .jet { animation: none; } }
+  .hero p.lede {
+    font-size: clamp(17px, 2vw, 20px); color: rgba(238,246,248,0.82);
+    max-width: 32em; margin: 0 0 34px;
+  }
+  .hero-stage { opacity: 0; transform: translateY(30px); }
+  .hero-play .hero-stage {
+    animation: heroUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .hero-play .hero-stage.s2 { animation-delay: 0.25s; }
+  .hero-play .hero-stage.s3 { animation-delay: 0.5s; }
+  .hero-play .hero-stage.s4 { animation-delay: 0.75s; }
+  @keyframes heroUp { to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-stage { opacity: 1; transform: none; animation: none !important; }
+  }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .btn {
+    display: inline-block; padding: 16px 30px; text-decoration: none;
+    font-family: "Arial Black", Arial, sans-serif; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 0.06em; font-size: 15px;
+    background: var(--accent-bright); color: #06222c;
+    border: 2px solid var(--accent-bright);
+    position: relative; overflow: hidden;
+    transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s;
+  }
+  .btn::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 40%;
+    left: -60%; transform: skewX(-20deg);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+    transition: left 0.5s ease;
+  }
+  .btn:hover::after { left: 130%; }
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(62,205,235,0.35);
+  }
+  .hero .btn.ghost {
+    background: transparent; color: #eef6f8; border-color: rgba(238,246,248,0.5);
+  }
+  .hero .btn.ghost:hover { border-color: var(--accent-bright); color: var(--accent-bright); box-shadow: none; }
+  .specs {
+    display: flex; gap: 34px; margin-top: 44px; padding-top: 24px;
+    border-top: 1px solid rgba(238,246,248,0.18); flex-wrap: wrap;
+  }
+  .spec .mono { font-size: 24px; font-weight: 700; color: #eef6f8; display: block; min-width: 5.2ch; }
+  .spec span:last-child { font-size: 12.5px; color: rgba(238,246,248,0.5); text-transform: uppercase; letter-spacing: 0.1em; }
+  .hero-hint {
+    margin-top: 20px; font-family: ui-monospace, Menlo, monospace;
+    font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: rgba(238,246,248,0.4);
+  }
+  .scroll-hint {
+    position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%);
+    z-index: 2; color: rgba(238,246,248,0.55); font-size: 11px;
+    letter-spacing: 0.3em; text-transform: uppercase;
+    font-family: ui-monospace, Menlo, monospace;
+    animation: hintFloat 2.4s ease-in-out infinite;
+  }
+  @keyframes hintFloat {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(7px); }
+  }
+  @media (prefers-reduced-motion: reduce) { .scroll-hint { animation: none; } }
+
+  /* ---------- Marquee band ---------- */
+  .marquee {
+    background: #0a1216; overflow: hidden;
+    border-top: 1px solid rgba(62,205,235,0.25);
+    border-bottom: 1px solid rgba(62,205,235,0.25);
+    padding: 13px 0;
+  }
+  .marquee-track {
+    display: flex; width: max-content;
+    animation: marq 30s linear infinite;
+  }
+  .marquee-track span {
+    font-family: "Arial Black", Arial, sans-serif; font-weight: 900;
+    text-transform: uppercase; white-space: nowrap;
+    font-size: 15px; letter-spacing: 0.28em;
+    color: rgba(160,220,235,0.55);
+    padding-right: 56px;
+  }
+  .marquee-track b { color: var(--accent-bright); font-weight: 900; padding: 0 14px; }
+  @keyframes marq { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }
+
+  /* ---------- Sections ---------- */
+  section { padding: 96px 0; border-bottom: 1px solid var(--line); }
+  section h2 { font-size: clamp(30px, 4vw, 48px); margin: 0 0 18px; }
+  .section-intro { color: var(--ink-soft); max-width: 40em; margin: 0 0 46px; }
+
+  /* Before/after showcase */
+  .ba-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 48px; align-items: center; }
+  @media (max-width: 900px) { .ba-grid { grid-template-columns: 1fr; } }
+  .ba {
+    position: relative; aspect-ratio: 16 / 10; overflow: hidden;
+    border: 1px solid var(--line); background: var(--hero-clean);
+    user-select: none;
+    box-shadow: 0 30px 60px -30px rgba(10, 40, 50, 0.35);
+  }
+  .ba canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .ba .dirty { clip-path: inset(0 calc(100% - var(--pos, 55%)) 0 0); }
+  .ba .wet {
+    position: absolute; top: 0; bottom: 0;
+    left: var(--pos, 55%); width: 9%;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(12,60,80,0.38), rgba(12,60,80,0.14) 55%, transparent);
+    mix-blend-mode: multiply;
+  }
+  .ba .sheen {
+    position: absolute; inset: 0; pointer-events: none;
+    clip-path: inset(0 0 0 var(--pos, 55%));
+    background: linear-gradient(115deg, transparent 42%, rgba(255,255,255,0.3) 50%, transparent 58%);
+    background-size: 260% 100%;
+    background-repeat: no-repeat;
+    animation: sheenSweep 5s ease-in-out infinite;
+  }
+  @keyframes sheenSweep {
+    0%, 55% { background-position: 130% 0; }
+    100% { background-position: -80% 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .ba .sheen { animation: none; opacity: 0; } }
+  .ba-handle {
+    position: absolute; top: 0; bottom: 0; left: var(--pos, 55%);
+    width: 3px; background: var(--accent-bright); transform: translateX(-50%);
+    pointer-events: none;
+    box-shadow: 0 0 18px rgba(62,205,235,0.7);
+  }
+  .ba-handle::after {
+    content: "◂ ▸"; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 13px; letter-spacing: 2px; padding: 8px 10px;
+    font-family: ui-monospace, Menlo, monospace; white-space: nowrap;
+    border-radius: 999px;
+  }
+  .ba input[type="range"] {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; margin: 0; cursor: ew-resize;
+  }
+  .ba-label {
+    position: absolute; top: 12px; font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px; letter-spacing: 0.2em; padding: 5px 9px;
+    background: rgba(240,242,241,0.8);
+    background: color-mix(in srgb, var(--bg) 80%, transparent);
+    color: var(--ink); pointer-events: none;
+  }
+  .ba-label.before { left: 12px; }
+  .ba-label.after { right: 12px; }
+  .ba-caption { font-size: 13px; color: var(--mist); margin-top: 12px; }
+
+  .services {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--line); border: 1px solid var(--line);
+  }
+  @media (max-width: 900px) { .services { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .services { grid-template-columns: 1fr; } }
+  .service {
+    background: var(--bg-raised); padding: 28px 24px 32px;
+    position: relative; overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  .service::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--accent); transform: scaleY(0); transform-origin: top;
+    transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+    z-index: 1;
+  }
+  .service::after {
+    content: ""; position: absolute; inset: 0; opacity: 0; pointer-events: none;
+    transition: opacity 0.35s;
+    background: radial-gradient(230px circle at var(--mx, 50%) var(--my, 50%), rgba(12,147,180,0.13), transparent 70%);
+    background: radial-gradient(230px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%);
+  }
+  .service:hover { transform: translateY(-3px); }
+  .service:hover::before { transform: scaleY(1); }
+  .service:hover::after { opacity: 1; }
+  .service svg {
+    width: 30px; height: 30px; color: var(--accent);
+    display: block; margin-bottom: 14px;
+    transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+    position: relative; z-index: 1;
+  }
+  .service:hover svg { transform: translateY(-2px) scale(1.08); }
+  .service .mono { font-size: 11px; color: var(--accent); letter-spacing: 0.18em; }
+  .service-cta {
+    text-decoration: none; color: inherit; display: block;
+    background: linear-gradient(150deg, var(--bg-raised), rgba(12,147,180,0.10));
+  }
+  .service-cta h3 { color: var(--accent); }
+  .service h3 {
+    font-family: "Arial Black", Arial, sans-serif; text-transform: uppercase;
+    font-size: 17px; margin: 10px 0 8px; letter-spacing: 0.02em;
+  }
+  .service p { margin: 0; font-size: 15px; color: var(--ink-soft); }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; position: relative; }
+  .steps::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 14px; height: 2px;
+    background: linear-gradient(90deg, var(--accent), rgba(12,147,180,0.15));
+    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 15%, transparent));
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.25s;
+  }
+  .steps.in::before { transform: scaleX(1); }
+  @media (max-width: 800px) {
+    .steps { grid-template-columns: 1fr; gap: 32px; }
+    .steps::before { display: none; }
+  }
+  .step .mono {
+    font-size: 15px; color: var(--accent-ink); background: var(--accent);
+    display: inline-block; padding: 4px 12px; font-weight: 700;
+    position: relative; z-index: 1;
+  }
+  .step h3 {
+    font-family: "Arial Black", Arial, sans-serif; text-transform: uppercase;
+    font-size: 18px; margin: 16px 0 8px;
+  }
+  .step p { margin: 0; color: var(--ink-soft); font-size: 15.5px; }
+
+  .usps { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 48px; }
+  @media (max-width: 700px) { .usps { grid-template-columns: 1fr; } }
+  .usp { display: flex; gap: 14px; align-items: baseline; }
+  .usp::before { content: "▮"; color: var(--accent); font-size: 14px; }
+  .usp strong { display: block; }
+  .usp span { color: var(--ink-soft); font-size: 15px; }
+
+  /* ---------- Contact — ambient droplet canvas behind ---------- */
+  #kontakt { position: relative; overflow: hidden; }
+  #dropFx {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    display: block; pointer-events: none; opacity: 0.55;
+  }
+  #kontakt .wrap { position: relative; z-index: 1; }
+  .contact-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px; }
+  @media (max-width: 800px) { .contact-grid { grid-template-columns: 1fr; } }
+  .contact-card {
+    background: var(--bg-raised); border: 1px solid var(--line); padding: 28px;
+    box-shadow: 0 24px 50px -30px rgba(10, 40, 50, 0.3);
+  }
+  .contact-card dt {
+    font-family: ui-monospace, Menlo, monospace; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.2em; color: var(--mist);
+    margin-top: 18px;
+  }
+  .contact-card dt:first-child { margin-top: 0; }
+  .contact-card dd { margin: 4px 0 0; font-size: 18px; font-weight: 600; }
+  .contact-card dl { margin: 0; }
+
+  footer { padding: 28px 0 40px; color: var(--mist); font-size: 13.5px; }
+  .footer-row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .steps::before { transition: none; transform: scaleX(1); }
+    .service, .btn, .service svg, .nav-links a::after { transition: none; }
+    .btn::after { display: none; }
+    .click-ripple { display: none; }
   }
 </style>
 </head>
 <body>
-  <h1>Snake</h1>
-  <div id="score">Punkte: 0</div>
-  <canvas id="game" width="400" height="400"></canvas>
-  <div id="msg">Pfeiltasten zum Steuern. Leertaste = Neustart.</div>
+
+<div class="wipe" aria-hidden="true"><div class="wipe-a"></div><div class="wipe-b" id="wipeEnd"></div></div>
+
+<header>
+  <nav class="nav" aria-label="Hauptnavigation">
+    <a class="brand" href="#top">
+      <span class="display">Haydar</span>
+      <span class="mono">HOCHDRUCK&shy;REINIGUNG</span>
+    </a>
+    <div class="nav-links">
+      <a href="#vergleich">Vorher / Nachher</a>
+      <a href="#leistungen">Leistungen</a>
+      <a href="#ablauf">Ablauf</a>
+      <a href="#kontakt">Kontakt</a>
+    </div>
+  </nav>
+</header>
+
+<main id="top">
+  <div class="hero" id="hero">
+    <canvas id="heroFx" aria-hidden="true"></canvas>
+    <div class="hero-content" id="heroContent">
+      <p class="eyebrow hero-stage">Professionelle Flächenreinigung · 250 bar</p>
+      <h1 class="display hero-stage s2">Schmutz hat<br>keine <span class="jet">Chance.</span></h1>
+      <p class="lede hero-stage s3">
+        Graffiti-Entfernung und Flächenreinigung: Wir bringen Fassaden, Zäune,
+        Einfahrten und Terrassen zurück in den Neuzustand — mit professioneller
+        Hochdrucktechnik, schonend fürs Material, sauber beim ersten Termin.
+      </p>
+      <div class="cta-row hero-stage s4">
+        <a class="btn" href="#kontakt">Kostenloses Angebot</a>
+        <a class="btn ghost" href="#vergleich">Ergebnis ansehen</a>
+      </div>
+      <div class="specs hero-stage s4">
+        <div class="spec"><span class="mono" data-count="250" data-suffix="&nbsp;bar">0&nbsp;bar</span><span>Arbeitsdruck</span></div>
+        <div class="spec"><span class="mono" data-count="500" data-suffix="+">0+</span><span>Gereinigte Flächen</span></div>
+        <div class="spec"><span class="mono" data-count="100" data-suffix="&nbsp;%">0&nbsp;%</span><span>Festpreis-Garantie</span></div>
+      </div>
+      <p class="hero-hint hero-stage s4" id="heroHint">← Maus bewegen: Sie führen den Strahl</p>
+    </div>
+    <span class="scroll-hint" aria-hidden="true">▼ Scrollen</span>
+  </div>
+
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>Graffiti-Entfernung <b>✦</b> Zäune <b>✦</b> Mauern <b>✦</b> Fassaden <b>✦</b> Einfahrten <b>✦</b> Pflaster <b>✦</b> Terrassen <b>✦</b> Wege <b>✦</b></span>
+      <span>Graffiti-Entfernung <b>✦</b> Zäune <b>✦</b> Mauern <b>✦</b> Fassaden <b>✦</b> Einfahrten <b>✦</b> Pflaster <b>✦</b> Terrassen <b>✦</b> Wege <b>✦</b></span>
+    </div>
+  </div>
+
+  <section id="vergleich">
+    <div class="wrap">
+      <div class="ba-grid">
+        <div class="reveal">
+          <p class="eyebrow">Vorher / Nachher</p>
+          <h2 class="display">Sehen Sie den Unterschied</h2>
+          <p class="section-intro" style="margin-bottom:0;">
+            Jahre von Moos, Algen und Verwitterung — weg in einem Termin.
+            Ziehen Sie den Regler und legen Sie die Fläche selbst frei.
+          </p>
+        </div>
+        <div class="reveal d1">
+          <div class="ba" id="ba" style="--pos: 2%;">
+            <canvas class="clean" id="cvClean" aria-hidden="true"></canvas>
+            <canvas class="dirty" id="cvDirty" aria-hidden="true"></canvas>
+            <div class="wet" aria-hidden="true"></div>
+            <div class="sheen" aria-hidden="true"></div>
+            <div class="ba-handle" aria-hidden="true"></div>
+            <span class="ba-label before" aria-hidden="true">VORHER</span>
+            <span class="ba-label after" aria-hidden="true">NACHHER</span>
+            <input type="range" id="baRange" min="0" max="100" value="2" step="0.5"
+                   aria-label="Vorher-Nachher-Vergleich: Regler ziehen, um die gereinigte Fläche freizulegen">
+          </div>
+          <p class="ba-caption mono">↔ Regler ziehen: so arbeitet Hochdruck.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="leistungen">
+    <div class="wrap">
+      <p class="eyebrow reveal">Leistungen</p>
+      <h2 class="display reveal">Was wir sauber machen</h2>
+      <p class="section-intro reveal d1">
+        Jede Oberfläche braucht den richtigen Druck, die richtige Düse und das
+        richtige Verfahren. Wir stimmen die Technik auf Ihr Material ab — von
+        empfindlichem Naturstein bis zu robustem Beton.
+      </p>
+      <div class="services reveal d1">
+        <div class="service">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 9h6v12H9zM10 9V6h4v3M12 3v2M17 4l1.5-1.5M19 8h2"/>
+          </svg>
+          <span class="mono">SPEZIAL</span>
+          <h3>Graffiti-Entfernung</h3>
+          <p>Farbschichten von Wänden, Toren und Schildern lösen — punktgenau und ohne Schattenbildung, wo möglich.</p>
+        </div>
+        <div class="service">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 8l2-2 2 2v13H5zM11 8l2-2 2 2v13h-4zM17 8l2-2 2 2v13h-4zM2 13h1M22 13h-1"/>
+          </svg>
+          <span class="mono">SPEZIAL</span>
+          <h3>Zäune, Mauern &amp; Mülltonnenplätze</h3>
+          <p>Alles, was draußen steht und Wetter abbekommt — auf Anfrage auch regelmäßig im Pflegeintervall.</p>
+        </div>
+        <div class="service">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 10 12 3l8 7M6 10v11h12V10M10 14h4v7h-4z"/>
+          </svg>
+          <span class="mono">GEBÄUDE</span>
+          <h3>Fassaden</h3>
+          <p>Algen- und Grünbelag schonend entfernen — mit angepasstem Druck, damit Putz und Anstrich intakt bleiben.</p>
+        </div>
+        <div class="service">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 3 3 21M16 3l5 18M12 4v3M12 11v3M12 18v3"/>
+          </svg>
+          <span class="mono">FLÄCHE</span>
+          <h3>Einfahrten &amp; Pflaster</h3>
+          <p>Ölflecken, Moos und Verwitterung verschwinden. Auf Wunsch mit neuem Fugensand und Versiegelung.</p>
+        </div>
+        <div class="service">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 6h18M3 11h18M3 16h18M3 21h18M8 6v15M16 6v15"/>
+          </svg>
+          <span class="mono">FLÄCHE</span>
+          <h3>Terrassen &amp; Wege</h3>
+          <p>Holz, WPC, Naturstein und Betonplatten — grünbelagfrei und rutschsicher, ohne die Oberfläche aufzurauen.</p>
+        </div>
+        <a class="service service-cta" href="#kontakt">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          <span class="mono">IHRE FLÄCHE</span>
+          <h3>Nicht dabei?</h3>
+          <p>Schicken Sie uns ein Foto — wir sagen Ihnen ehrlich, ob Hochdruck die richtige Lösung ist.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section id="ablauf">
+    <div class="wrap">
+      <p class="eyebrow reveal">Ablauf</p>
+      <h2 class="display reveal">In drei Schritten sauber</h2>
+      <div class="steps" style="margin-top:42px;">
+        <div class="step reveal">
+          <span class="mono">1</span>
+          <h3>Anfrage &amp; Besichtigung</h3>
+          <p>Sie schicken uns Fotos oder wir kommen kurz vorbei. Sie erhalten ein Festpreisangebot — kostenlos und unverbindlich.</p>
+        </div>
+        <div class="step reveal d1">
+          <span class="mono">2</span>
+          <h3>Reinigung vor Ort</h3>
+          <p>Wir bringen Technik und Wasser­anschluss-Equipment mit, decken Empfindliches ab und reinigen gründlich in einem Termin.</p>
+        </div>
+        <div class="step reveal d2">
+          <span class="mono">3</span>
+          <h3>Abnahme &amp; Schutz</h3>
+          <p>Gemeinsame Abnahme im Hellen. Auf Wunsch versiegeln wir die Fläche, damit das Ergebnis deutlich länger hält.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="warum">
+    <div class="wrap">
+      <p class="eyebrow reveal">Warum wir</p>
+      <h2 class="display reveal">Gründlich statt grob</h2>
+      <p class="section-intro reveal d1">
+        Hochdruck ist kein Selbstzweck. Falscher Druck ruiniert Fugen, Holz und
+        Putz — richtiger Druck macht Flächen wie neu.
+      </p>
+      <div class="usps reveal d1">
+        <div class="usp"><div><strong>Materialschonende Verfahren</strong><span>Druck, Düse und Temperatur passend zur Oberfläche — keine Fräserschäden.</span></div></div>
+        <div class="usp"><div><strong>Festpreis vor Beginn</strong><span>Das Angebot gilt. Keine Überraschungen auf der Rechnung.</span></div></div>
+        <div class="usp"><div><strong>Saubere Baustelle</strong><span>Wir schützen angrenzende Flächen und hinterlassen alles ordentlich.</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="kontakt">
+    <canvas id="dropFx" aria-hidden="true"></canvas>
+    <div class="wrap">
+      <div class="contact-grid">
+        <div class="reveal">
+          <p class="eyebrow">Kontakt</p>
+          <h2 class="display">Angebot in 24&nbsp;h</h2>
+          <p class="section-intro">
+            Schicken Sie uns ein Foto Ihrer Fläche mit ungefähren Maßen — Sie
+            bekommen innerhalb eines Werktages ein Festpreisangebot. Oder rufen
+            Sie einfach an.
+          </p>
+          <a class="btn" href="mailto:haydaalabasi27@gmail.com?subject=Anfrage%20Hochdruckreinigung" style="background:var(--accent);border-color:var(--accent);color:var(--accent-ink);">E-Mail-Anfrage senden</a>
+        </div>
+        <div class="contact-card reveal d1">
+          <dl>
+            <dt>Telefon</dt>
+            <dd><a href="tel:+490000000000">+49 (0) 000 000 00 00</a></dd>
+            <dt>E-Mail</dt>
+            <dd><a href="mailto:haydaalabasi27@gmail.com">haydaalabasi27@gmail.com</a></dd>
+            <dt>Einsatzgebiet</dt>
+            <dd>Region &amp; Umkreis 50&nbsp;km</dd>
+            <dt>Erreichbar</dt>
+            <dd class="mono">Mo–Sa · 08:00–19:00</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap footer-row">
+    <span>© 2026 Haydar Hochdruckreinigung</span>
+    <span class="mono">GRAFFITI · ZÄUNE · FASSADEN · EINFAHRTEN · TERRASSEN</span>
+  </div>
+</footer>
 
 <script>
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-const grid = 20;
-const cells = canvas.width / grid;
+(function () {
+  'use strict';
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var coarse = window.matchMedia('(pointer: coarse)').matches;
+  var DPR = Math.min(window.devicePixelRatio || 1, 3); // native-res rendering, sharp up to 4K
 
-let snake, dir, nextDir, food, score, running, timer;
-
-function randCell() {
-  return Math.floor(Math.random() * cells);
-}
-
-function placeFood() {
-  let pos;
-  do {
-    pos = { x: randCell(), y: randCell() };
-  } while (snake.some(s => s.x === pos.x && s.y === pos.y));
-  food = pos;
-}
-
-function reset() {
-  snake = [{ x: 8, y: 10 }, { x: 7, y: 10 }, { x: 6, y: 10 }];
-  dir = { x: 1, y: 0 };
-  nextDir = dir;
-  score = 0;
-  running = true;
-  document.getElementById('msg').textContent = 'Pfeiltasten zum Steuern. Leertaste = Neustart.';
-  updateScore();
-  placeFood();
-}
-
-function updateScore() {
-  document.getElementById('score').textContent = 'Punkte: ' + score;
-}
-
-function tick() {
-  if (!running) return;
-  dir = nextDir;
-  const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
-
-  if (
-    head.x < 0 || head.x >= cells ||
-    head.y < 0 || head.y >= cells ||
-    snake.some(s => s.x === head.x && s.y === head.y)
-  ) {
-    running = false;
-    document.getElementById('msg').textContent = 'Game Over! Leertaste = Neustart.';
-    return;
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+  function mulberry32(seed) {
+    return function () {
+      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
   }
 
-  snake.unshift(head);
+  /* remove the intro wipe once it has played */
+  (function wipe() {
+    var end = document.getElementById('wipeEnd');
+    if (!end) return;
+    end.addEventListener('animationend', function () {
+      var w = end.parentNode;
+      if (w && w.parentNode) w.parentNode.removeChild(w);
+    });
+    setTimeout(function () { // safety net
+      var w = document.querySelector('.wipe');
+      if (w && w.parentNode) w.parentNode.removeChild(w);
+    }, 2500);
+  })();
 
-  if (head.x === food.x && head.y === food.y) {
-    score += 10;
-    updateScore();
-    placeFood();
-  } else {
-    snake.pop();
+  /* water ripple on click/tap */
+  if (!reducedMotion) {
+    document.addEventListener('pointerdown', function (e) {
+      var r = document.createElement('div');
+      r.className = 'click-ripple';
+      r.style.left = e.clientX + 'px';
+      r.style.top = e.clientY + 'px';
+      document.body.appendChild(r);
+      r.addEventListener('animationend', function () { r.remove(); });
+    });
   }
 
-  draw();
-}
+  /* ============================================================
+     HERO — night scene, layered like a film shot:
+     clean wet pavers → erodible dirt → bokeh, mist, jet beam,
+     ~1500 particles, foam → mirrored reflection in the wet
+     ground → drizzle → worker silhouette with lance & hose →
+     lens droplets → film grain. The jet follows the pointer and
+     really cleans; dirt slowly regrows. Adaptive quality keeps
+     60 fps, canvas renders at devicePixelRatio (4K-sharp).
+     ============================================================ */
+  (function heroJet() {
+    var cv = document.getElementById('heroFx');
+    var hero = document.getElementById('hero');
+    var ctx = cv.getContext('2d');
+    var dpr = DPR;
+    var W = 0, H = 0, ground = 0, groundH = 0;
+    var bg = document.createElement('canvas');       // static night scene + clean pavers
+    var dirt = document.createElement('canvas');     // erodible dirt on the ground strip
+    var dirtFull = document.createElement('canvas'); // pristine dirt copy for slow regrowth
+    var fx = document.createElement('canvas');       // per-frame light layer (mirrored for reflection)
+    var fxCtx = fx.getContext('2d');
+    var grain = document.createElement('canvas');
+    var grainPattern = null;
+    var particles = [], foam = [], mist = [], rain = [], lensDrops = [];
+    var t = 0, mouseX = null;
+    var sprayCount = coarse ? 16 : 22;
 
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+    var bokeh = [
+      { fx: 0.10, fy: 0.16, r: 70, hue: 'rgba(255,214,150,' },
+      { fx: 0.38, fy: 0.09, r: 46, hue: 'rgba(200,230,245,' },
+      { fx: 0.62, fy: 0.14, r: 58, hue: 'rgba(255,214,150,' },
+      { fx: 0.88, fy: 0.08, r: 40, hue: 'rgba(200,230,245,' }
+    ];
 
-  ctx.fillStyle = '#f38ba8';
-  ctx.fillRect(food.x * grid, food.y * grid, grid - 1, grid - 1);
+    function paintPavers(c, w, h, tone) {
+      var rnd = mulberry32(99);
+      var rows = 3, bw = w / 9;
+      var bh = h / rows;
+      c.fillStyle = tone.joint;
+      c.fillRect(0, 0, w, h);
+      var jointPx = Math.max(1.5 * dpr, h * 0.02);
+      for (var r = 0; r < rows; r++) {
+        var off = (r % 2) * bw * 0.5;
+        for (var x = -bw; x < w + bw; x += bw) {
+          var bx = x + off, by = r * bh;
+          var shade = 0.85 + rnd() * 0.3;
+          c.fillStyle = tone.stone(shade);
+          c.fillRect(bx + jointPx / 2, by + jointPx / 2, bw - jointPx, bh - jointPx);
+          c.fillStyle = 'rgba(255,255,255,' + (0.03 + rnd() * 0.05) + ')';
+          c.fillRect(bx + jointPx / 2, by + jointPx / 2, bw - jointPx, bh * 0.18);
+        }
+      }
+    }
 
-  snake.forEach((s, i) => {
-    ctx.fillStyle = i === 0 ? '#a6e3a1' : '#89b4fa';
-    ctx.fillRect(s.x * grid, s.y * grid, grid - 1, grid - 1);
-  });
-}
+    function renderBG() {
+      bg.width = W; bg.height = H;
+      var c = bg.getContext('2d');
+      var g = c.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#0a1116');
+      g.addColorStop(0.62, '#0c141a');
+      g.addColorStop(0.86, '#111d25');
+      g.addColorStop(1, '#0c161d');
+      c.fillStyle = g;
+      c.fillRect(0, 0, W, H);
+      // distant skyline silhouette
+      var rnd = mulberry32(4);
+      c.fillStyle = '#0a1319';
+      var sx = 0, sy;
+      c.beginPath();
+      c.moveTo(0, ground);
+      while (sx < W) {
+        var bw2 = (30 + rnd() * 90) * dpr;
+        sy = ground - (20 + rnd() * 90) * dpr;
+        c.lineTo(sx, sy); c.lineTo(sx + bw2, sy);
+        sx += bw2;
+      }
+      c.lineTo(W, ground); c.closePath(); c.fill();
+      // lit windows
+      for (var wdw = 0; wdw < 26; wdw++) {
+        c.fillStyle = 'rgba(255,214,150,' + (0.05 + rnd() * 0.16) + ')';
+        c.fillRect(rnd() * W, ground - (14 + rnd() * 80) * dpr, 2.2 * dpr, 3.2 * dpr);
+      }
+      // haze speckle
+      for (var j = 0; j < 150; j++) {
+        c.fillStyle = 'rgba(160,200,215,' + (rnd() * 0.05) + ')';
+        c.beginPath();
+        c.arc(rnd() * W, rnd() * ground, rnd() * 1.4 * dpr, 0, Math.PI * 2);
+        c.fill();
+      }
+      // clean wet pavers on the ground strip
+      c.save();
+      c.translate(0, ground);
+      paintPavers(c, W, groundH, {
+        joint: '#131f26',
+        stone: function (s) {
+          var v = Math.round(52 * s);
+          return 'rgb(' + (v + 14) + ',' + (v + 26) + ',' + (v + 34) + ')';
+        }
+      });
+      for (var i = 0; i < 70; i++) {
+        c.fillStyle = 'rgba(120,210,235,' + (0.03 + rnd() * 0.08) + ')';
+        c.fillRect(rnd() * W, rnd() * groundH, (14 + rnd() * 100) * dpr / 2, dpr);
+      }
+      c.restore();
+    }
 
-document.addEventListener('keydown', e => {
-  switch (e.key) {
-    case 'ArrowUp':    if (dir.y === 0) nextDir = { x: 0, y: -1 }; break;
-    case 'ArrowDown':  if (dir.y === 0) nextDir = { x: 0, y: 1 }; break;
-    case 'ArrowLeft':  if (dir.x === 0) nextDir = { x: -1, y: 0 }; break;
-    case 'ArrowRight': if (dir.x === 0) nextDir = { x: 1, y: 0 }; break;
-    case ' ':
-      if (!running) reset();
-      break;
-  }
-});
+    function renderDirt() {
+      dirt.width = W; dirt.height = groundH;
+      var c = dirt.getContext('2d');
+      var g = c.createLinearGradient(0, 0, 0, groundH);
+      g.addColorStop(0, '#2c2921');
+      g.addColorStop(1, '#211f19');
+      c.fillStyle = g;
+      c.fillRect(0, 0, W, groundH);
+      var rnd = mulberry32(23);
+      for (var i = 0; i < 260; i++) {
+        c.fillStyle = ['#38332a', '#1d1b15', '#3d4a2e', '#46412f'][(rnd() * 4) | 0];
+        c.globalAlpha = 0.15 + rnd() * 0.3;
+        c.beginPath();
+        c.ellipse(rnd() * W, rnd() * groundH, (4 + rnd() * 30) * dpr, (2 + rnd() * 8) * dpr, rnd() * Math.PI, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.globalAlpha = 1;
+      for (var m = 0; m < 40; m++) {
+        c.fillStyle = 'rgba(74,94,48,' + (0.25 + rnd() * 0.35) + ')';
+        c.beginPath();
+        c.ellipse(rnd() * W, rnd() * groundH, (8 + rnd() * 40) * dpr, (2 + rnd() * 5) * dpr, 0, 0, Math.PI * 2);
+        c.fill();
+      }
+      dirtFull.width = W; dirtFull.height = groundH;
+      dirtFull.getContext('2d').drawImage(dirt, 0, 0);
+    }
 
-reset();
-draw();
-clearInterval(timer);
-timer = setInterval(tick, 120);
+    function renderGrain() {
+      grain.width = 160; grain.height = 160;
+      var c = grain.getContext('2d');
+      var img = c.createImageData(160, 160);
+      for (var i = 0; i < img.data.length; i += 4) {
+        var v = (Math.random() * 255) | 0;
+        img.data[i] = v; img.data[i + 1] = v; img.data[i + 2] = v;
+        img.data[i + 3] = 22;
+      }
+      c.putImageData(img, 0, 0);
+      grainPattern = ctx.createPattern(grain, 'repeat');
+    }
+
+    function initRain() {
+      rain = [];
+      var n = Math.min(140, Math.round(W / dpr / (coarse ? 16 : 9)));
+      for (var i = 0; i < n; i++) {
+        rain.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          len: (7 + Math.random() * 13) * dpr,
+          sp: (6.5 + Math.random() * 6) * dpr,
+          a: 0.04 + Math.random() * 0.1
+        });
+      }
+    }
+
+    function resize() {
+      var r = cv.getBoundingClientRect();
+      W = Math.max(1, Math.round(r.width * dpr));
+      H = Math.max(1, Math.round(r.height * dpr));
+      cv.width = W; cv.height = H;
+      fx.width = W; fx.height = H;
+      ground = Math.round(H * 0.84);
+      groundH = H - ground;
+      dirtCtx = null;
+      renderBG();
+      renderDirt();
+      renderGrain();
+      initRain();
+      if (reducedMotion) staticFrame();
+    }
+
+    function nozzle() { return { x: W * 0.88, y: H * 0.70 }; }
+    function targetX() {
+      if (mouseX !== null) return Math.max(W * 0.06, Math.min(W * 0.8, mouseX));
+      return W * (0.42 + 0.3 * Math.sin(t * 0.008));
+    }
+
+    function spawn() {
+      var n = nozzle();
+      var tx = targetX();
+      var dx = tx - n.x, dy = ground - n.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      var a = Math.atan2(dy, dx);
+      var speed = dist / 26;
+      for (var i = 0; i < sprayCount; i++) {
+        var spread = (Math.random() - 0.5) * 0.1;
+        var sp = speed * (0.85 + Math.random() * 0.35);
+        particles.push({
+          x: n.x, y: n.y,
+          vx: Math.cos(a + spread) * sp,
+          vy: Math.sin(a + spread) * sp,
+          life: 1,
+          decay: 0.014 + Math.random() * 0.02,
+          r: (0.8 + Math.random() * 2.2) * dpr,
+          splash: false
+        });
+      }
+      if (mist.length < 24 && Math.random() > 0.55) {
+        mist.push({
+          x: tx + (Math.random() - 0.5) * W * 0.25,
+          y: ground - Math.random() * H * 0.16,
+          r: (30 + Math.random() * 90) * dpr,
+          vx: -(0.2 + Math.random() * 0.6) * dpr,
+          vy: -(0.1 + Math.random() * 0.3) * dpr,
+          life: 1,
+          decay: 0.004 + Math.random() * 0.005
+        });
+      }
+      // occasional droplet lands on the "lens"
+      if (!coarse && lensDrops.length < 3 && Math.random() < 0.004) {
+        lensDrops.push({
+          x: (0.15 + Math.random() * 0.7) * W,
+          y: (0.1 + Math.random() * 0.4) * H,
+          r: (7 + Math.random() * 14) * dpr,
+          vy: (0.14 + Math.random() * 0.2) * dpr,
+          life: 1
+        });
+      }
+      if (particles.length > 1500) particles.splice(0, particles.length - 1500);
+    }
+
+    var dirtCtx = null;
+    function erodeAt(x) {
+      if (!dirtCtx) dirtCtx = dirt.getContext('2d');
+      var r = 26 * dpr;
+      var y = Math.random() * groundH * 0.9;
+      dirtCtx.globalCompositeOperation = 'destination-out';
+      var g = dirtCtx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, 'rgba(0,0,0,0.5)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      dirtCtx.fillStyle = g;
+      dirtCtx.beginPath(); dirtCtx.arc(x, y, r, 0, Math.PI * 2); dirtCtx.fill();
+      dirtCtx.globalCompositeOperation = 'source-over';
+    }
+
+    function regrowDirt() {
+      if (!dirtCtx) dirtCtx = dirt.getContext('2d');
+      dirtCtx.globalAlpha = 0.0022;
+      dirtCtx.drawImage(dirtFull, 0, 0);
+      dirtCtx.globalAlpha = 1;
+    }
+
+    function drawWorker(c, n, tx) {
+      // stylised silhouette holding the lance, hose trailing off-screen
+      var la = Math.atan2(ground - n.y, tx - n.x);
+      var butt = {
+        x: n.x - Math.cos(la) * 95 * dpr,
+        y: n.y - Math.sin(la) * 95 * dpr
+      };
+      c.strokeStyle = '#0c1318';
+      c.fillStyle = '#0c1318';
+      c.lineCap = 'round';
+      // hose from lance butt, swaying, off to the right edge
+      c.lineWidth = 4.5 * dpr;
+      c.beginPath();
+      c.moveTo(butt.x, butt.y + 4 * dpr);
+      c.bezierCurveTo(
+        butt.x + 40 * dpr, n.y + 70 * dpr + Math.sin(t * 0.03) * 6 * dpr,
+        W * 0.965, ground - 20 * dpr,
+        W * 1.01, ground + groundH * 0.45
+      );
+      c.strokeStyle = '#152430';
+      c.stroke();
+      c.strokeStyle = '#0c1318';
+      // legs
+      var hipX = n.x + 40 * dpr, hipY = ground - H * 0.105;
+      c.lineWidth = 9 * dpr;
+      c.beginPath(); c.moveTo(hipX, hipY); c.lineTo(n.x + 12 * dpr, ground - 2 * dpr); c.stroke();
+      c.beginPath(); c.moveTo(hipX, hipY); c.lineTo(n.x + 58 * dpr, ground - 2 * dpr); c.stroke();
+      // torso leaning into the work
+      var shX = n.x + 24 * dpr, shY = n.y - 26 * dpr;
+      c.lineWidth = 13 * dpr;
+      c.beginPath(); c.moveTo(hipX, hipY); c.lineTo(shX, shY); c.stroke();
+      // arms to the lance
+      c.lineWidth = 7 * dpr;
+      c.beginPath(); c.moveTo(shX, shY); c.lineTo(n.x + 6 * dpr, n.y); c.stroke();
+      c.beginPath(); c.moveTo(shX, shY); c.lineTo(butt.x + 6 * dpr, butt.y + 2 * dpr); c.stroke();
+      // head with cap
+      var hX = shX - 3 * dpr, hY = shY - 12 * dpr;
+      c.beginPath(); c.arc(hX, hY, 7.5 * dpr, 0, Math.PI * 2); c.fill();
+      c.fillRect(hX - 12 * dpr, hY - 3.5 * dpr, 11 * dpr, 3 * dpr);
+      // lance
+      c.lineWidth = 6.5 * dpr;
+      c.strokeStyle = '#22333d';
+      c.beginPath(); c.moveTo(n.x, n.y); c.lineTo(butt.x, butt.y); c.stroke();
+      c.lineWidth = 11 * dpr;
+      c.beginPath();
+      c.moveTo(n.x - Math.cos(la) * 62 * dpr, n.y - Math.sin(la) * 62 * dpr);
+      c.lineTo(n.x - Math.cos(la) * 90 * dpr, n.y - Math.sin(la) * 90 * dpr);
+      c.stroke();
+      // cyan rim light on the figure's spray side
+      c.strokeStyle = 'rgba(120,215,240,0.16)';
+      c.lineWidth = 2 * dpr;
+      c.beginPath(); c.moveTo(hipX - 6 * dpr, hipY); c.lineTo(shX - 6 * dpr, shY); c.stroke();
+    }
+
+    var lastTs = 0, dtSum = 0, dtN = 0;
+    function step(ts) {
+      t++;
+      if (lastTs) { dtSum += ts - lastTs; dtN++; }
+      lastTs = ts;
+      // adaptive quality: drop internal resolution if the device struggles
+      if (dtN >= 120) {
+        var avg = dtSum / dtN;
+        dtSum = 0; dtN = 0;
+        if (avg > 26 && dpr > 1.6) {
+          dpr = Math.max(1.5, dpr * 0.72);
+          resize();
+        } else if (avg > 34 && sprayCount > 12) {
+          sprayCount = 12;
+        }
+      }
+
+      spawn();
+      regrowDirt();
+
+      ctx.drawImage(bg, 0, 0);
+      ctx.drawImage(dirt, 0, ground);
+
+      /* ---- light layer (gets mirrored into the wet ground) ---- */
+      fxCtx.clearRect(0, 0, W, H);
+      fxCtx.globalCompositeOperation = 'lighter';
+
+      for (var b = 0; b < bokeh.length; b++) {
+        var bo = bokeh[b];
+        var pul = 0.75 + 0.25 * Math.sin(t * 0.02 + b * 1.7);
+        var br = bo.r * dpr;
+        var bgd = fxCtx.createRadialGradient(bo.fx * W, bo.fy * H, 0, bo.fx * W, bo.fy * H, br);
+        bgd.addColorStop(0, bo.hue + (0.11 * pul) + ')');
+        bgd.addColorStop(0.4, bo.hue + (0.045 * pul) + ')');
+        bgd.addColorStop(1, bo.hue + '0)');
+        fxCtx.fillStyle = bgd;
+        fxCtx.beginPath(); fxCtx.arc(bo.fx * W, bo.fy * H, br, 0, Math.PI * 2); fxCtx.fill();
+      }
+
+      for (var m = mist.length - 1; m >= 0; m--) {
+        var f = mist[m];
+        f.x += f.vx; f.y += f.vy; f.life -= f.decay;
+        if (f.life <= 0) { mist.splice(m, 1); continue; }
+        var mg = fxCtx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r);
+        mg.addColorStop(0, 'rgba(140,215,235,' + (0.05 * f.life) + ')');
+        mg.addColorStop(1, 'rgba(140,215,235,0)');
+        fxCtx.fillStyle = mg;
+        fxCtx.beginPath(); fxCtx.arc(f.x, f.y, f.r, 0, Math.PI * 2); fxCtx.fill();
+      }
+
+      var n = nozzle();
+      var tx = targetX();
+      var beam = fxCtx.createLinearGradient(n.x, n.y, tx, ground);
+      beam.addColorStop(0, 'rgba(210,242,252,0.30)');
+      beam.addColorStop(1, 'rgba(210,242,252,0.02)');
+      fxCtx.fillStyle = beam;
+      fxCtx.beginPath();
+      fxCtx.moveTo(n.x, n.y - 2 * dpr);
+      fxCtx.lineTo(tx - 16 * dpr, ground);
+      fxCtx.lineTo(tx + 16 * dpr, ground);
+      fxCtx.lineTo(n.x, n.y + 2 * dpr);
+      fxCtx.closePath();
+      fxCtx.fill();
+
+      var grav = 0.3 * dpr;
+      for (var i = particles.length - 1; i >= 0; i--) {
+        var p = particles[i];
+        p.x += p.vx; p.y += p.vy;
+        p.vy += grav; p.vx *= 0.994;
+        p.life -= p.decay;
+        if (!p.splash && p.y >= ground) {
+          p.splash = true;
+          p.y = ground;
+          erodeAt(p.x);
+          if (foam.length < 220 && Math.random() > 0.4) {
+            foam.push({
+              x: p.x + (Math.random() - 0.5) * 14 * dpr,
+              y: ground + Math.random() * groundH * 0.5,
+              r: (0.8 + Math.random() * 2.4) * dpr,
+              life: 1,
+              decay: 0.01 + Math.random() * 0.025,
+              vx: (Math.random() - 0.5) * 1.2 * dpr
+            });
+          }
+          p.vy = -Math.abs(p.vy) * (0.16 + Math.random() * 0.24);
+          p.vx *= 0.35 + Math.random() * 0.3;
+          p.life = Math.min(p.life, 0.5);
+          p.r *= 0.7;
+        }
+        if (p.life <= 0 || p.x < -50 || p.y > H + 50) { particles.splice(i, 1); continue; }
+        var al = p.life;
+        fxCtx.fillStyle = (p.splash ? 'rgba(200,240,250,' : 'rgba(225,248,255,') + (al * 0.85) + ')';
+        fxCtx.beginPath(); fxCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2); fxCtx.fill();
+        if (!p.splash) {
+          fxCtx.strokeStyle = 'rgba(62,205,235,' + (al * 0.26) + ')';
+          fxCtx.lineWidth = p.r * 0.9;
+          fxCtx.beginPath();
+          fxCtx.moveTo(p.x, p.y);
+          fxCtx.lineTo(p.x - p.vx * 1.6, p.y - p.vy * 1.6);
+          fxCtx.stroke();
+        }
+      }
+
+      var ig = fxCtx.createRadialGradient(tx, ground, 0, tx, ground, 70 * dpr);
+      ig.addColorStop(0, 'rgba(190,240,252,0.35)');
+      ig.addColorStop(1, 'rgba(190,240,252,0)');
+      fxCtx.fillStyle = ig;
+      fxCtx.beginPath(); fxCtx.arc(tx, ground, 70 * dpr, 0, Math.PI * 2); fxCtx.fill();
+
+      var ng = fxCtx.createRadialGradient(n.x, n.y, 0, n.x, n.y, 55 * dpr);
+      ng.addColorStop(0, 'rgba(180,235,250,0.5)');
+      ng.addColorStop(1, 'rgba(180,235,250,0)');
+      fxCtx.fillStyle = ng;
+      fxCtx.beginPath(); fxCtx.arc(n.x, n.y, 55 * dpr, 0, Math.PI * 2); fxCtx.fill();
+
+      fxCtx.globalCompositeOperation = 'source-over';
+      for (var fb = foam.length - 1; fb >= 0; fb--) {
+        var q = foam[fb];
+        q.x += q.vx; q.life -= q.decay;
+        if (q.life <= 0) { foam.splice(fb, 1); continue; }
+        fxCtx.fillStyle = 'rgba(235,250,255,' + (q.life * 0.55) + ')';
+        fxCtx.beginPath(); fxCtx.arc(q.x, q.y, q.r, 0, Math.PI * 2); fxCtx.fill();
+      }
+
+      /* composite the light layer, then mirror it into the wet ground */
+      ctx.drawImage(fx, 0, 0);
+      ctx.save();
+      ctx.beginPath(); ctx.rect(0, ground, W, groundH); ctx.clip();
+      ctx.globalAlpha = 0.24;
+      ctx.translate(0, 2 * ground);
+      ctx.scale(1, -1);
+      ctx.drawImage(fx, 0, 0);
+      ctx.restore();
+
+      /* drizzle in front, for depth */
+      ctx.strokeStyle = 'rgba(170,215,230,0.5)';
+      ctx.lineWidth = dpr * 0.8;
+      for (var rn = 0; rn < rain.length; rn++) {
+        var rd = rain[rn];
+        rd.y += rd.sp; rd.x -= rd.sp * 0.18;
+        if (rd.y > ground + groundH * 0.4) { rd.y = -rd.len; rd.x = Math.random() * (W * 1.2); }
+        ctx.globalAlpha = rd.a;
+        ctx.beginPath();
+        ctx.moveTo(rd.x, rd.y);
+        ctx.lineTo(rd.x + rd.len * 0.18, rd.y + rd.len);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      drawWorker(ctx, n, tx);
+
+      /* droplets clinging to the lens */
+      for (var ld = lensDrops.length - 1; ld >= 0; ld--) {
+        var d = lensDrops[ld];
+        d.y += d.vy; d.life -= 0.0035;
+        if (d.life <= 0) { lensDrops.splice(ld, 1); continue; }
+        var da = Math.min(0.5, d.life) * 0.9;
+        var dg = ctx.createRadialGradient(d.x - d.r * 0.3, d.y - d.r * 0.35, d.r * 0.1, d.x, d.y, d.r);
+        dg.addColorStop(0, 'rgba(200,235,248,' + 0.30 * da + ')');
+        dg.addColorStop(0.75, 'rgba(30,60,75,' + 0.22 * da + ')');
+        dg.addColorStop(1, 'rgba(220,245,252,' + 0.5 * da + ')');
+        ctx.fillStyle = dg;
+        ctx.beginPath();
+        ctx.ellipse(d.x, d.y, d.r * 0.82, d.r, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(235,250,255,' + 0.55 * da + ')';
+        ctx.beginPath();
+        ctx.ellipse(d.x - d.r * 0.28, d.y - d.r * 0.34, d.r * 0.16, d.r * 0.24, -0.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      /* film grain */
+      if (grainPattern) {
+        ctx.save();
+        ctx.globalAlpha = 0.05;
+        ctx.translate((Math.random() * 160) | 0, (Math.random() * 160) | 0);
+        ctx.fillStyle = grainPattern;
+        ctx.fillRect(-160, -160, W + 320, H + 320);
+        ctx.restore();
+      }
+
+      raf = requestAnimationFrame(step);
+    }
+
+    function staticFrame() {
+      ctx.drawImage(bg, 0, 0);
+      for (var i = 0; i < 260; i++) erodeAt(W * 0.3 + Math.random() * W * 0.3);
+      ctx.drawImage(dirt, 0, ground);
+      var n = nozzle();
+      ctx.globalCompositeOperation = 'lighter';
+      var jg = ctx.createLinearGradient(n.x, n.y, W * 0.45, ground);
+      jg.addColorStop(0, 'rgba(200,240,252,0.5)');
+      jg.addColorStop(1, 'rgba(200,240,252,0)');
+      ctx.fillStyle = jg;
+      ctx.beginPath();
+      ctx.moveTo(n.x, n.y);
+      ctx.lineTo(W * 0.42, ground - 6 * dpr);
+      ctx.lineTo(W * 0.52, ground + 4 * dpr);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      drawWorker(ctx, n, W * 0.45);
+    }
+
+    var raf = null, running = false;
+    function start() {
+      if (running || reducedMotion) return;
+      running = true;
+      lastTs = 0;
+      raf = requestAnimationFrame(step);
+    }
+    function stop() {
+      running = false;
+      if (raf) cancelAnimationFrame(raf);
+    }
+
+    resize();
+    if (!reducedMotion) {
+      start();
+      new IntersectionObserver(function (entries) {
+        entries[0].isIntersecting ? start() : stop();
+      }, { threshold: 0.05 }).observe(cv);
+
+      hero.addEventListener('mousemove', function (e) {
+        var r = cv.getBoundingClientRect();
+        mouseX = (e.clientX - r.left) * dpr;
+      });
+      hero.addEventListener('mouseleave', function () { mouseX = null; });
+      hero.addEventListener('touchmove', function (e) {
+        var r = cv.getBoundingClientRect();
+        mouseX = (e.touches[0].clientX - r.left) * dpr;
+      }, { passive: true });
+      hero.addEventListener('touchend', function () { mouseX = null; });
+
+      var content = document.getElementById('heroContent');
+      window.addEventListener('scroll', function () {
+        var y = window.scrollY;
+        if (y < window.innerHeight) {
+          content.style.transform = 'translateY(' + (y * 0.22) + 'px)';
+        }
+      }, { passive: true });
+    }
+    var rt;
+    window.addEventListener('resize', function () {
+      clearTimeout(rt); rt = setTimeout(function () {
+        dpr = DPR; // re-probe full quality on new geometry
+        resize();
+      }, 150);
+    });
+    requestAnimationFrame(function () {
+      hero.classList.add('hero-play');
+    });
+    if (coarse) {
+      document.getElementById('heroHint').textContent = '← Finger bewegen: Sie führen den Strahl';
+    }
+  })();
+
+  /* ================= Animated stat counters ================= */
+  (function counters() {
+    var els = document.querySelectorAll('.spec .mono[data-count]');
+    if (reducedMotion) {
+      els.forEach(function (el) {
+        el.innerHTML = el.getAttribute('data-count') + el.getAttribute('data-suffix');
+      });
+      return;
+    }
+    function ease(x) { return 1 - Math.pow(1 - x, 3); }
+    els.forEach(function (el) {
+      var target = parseInt(el.getAttribute('data-count'), 10);
+      var suffix = el.getAttribute('data-suffix');
+      var start = null, dur = 1700, delay = 900;
+      setTimeout(function () {
+        function frame(ts) {
+          if (!start) start = ts;
+          var k = Math.min(1, (ts - start) / dur);
+          el.innerHTML = Math.round(target * ease(k)) + suffix;
+          if (k < 1) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+      }, delay);
+    });
+  })();
+
+  /* ================= Before/after slider + auto-wash ================= */
+  (function beforeAfter() {
+    var ba = document.getElementById('ba');
+    var range = document.getElementById('baRange');
+    var cvClean = document.getElementById('cvClean');
+    var cvDirty = document.getElementById('cvDirty');
+    var userTouched = false;
+
+    range.addEventListener('input', function () {
+      userTouched = true;
+      ba.style.setProperty('--pos', range.value + '%');
+    });
+
+    function paverLayout(w, h) {
+      var rows = 5, bw = w / 8, bh = h / rows;
+      var stones = [];
+      var rnd = mulberry32(7);
+      for (var r = 0; r < rows; r++) {
+        var off = (r % 2) * bw * 0.5;
+        for (var x = -bw; x < w + bw; x += bw) {
+          stones.push({ x: x + off, y: r * bh, w: bw, h: bh, tone: rnd(), n1: rnd(), n2: rnd() });
+        }
+      }
+      return { stones: stones, joint: Math.max(2 * DPR, h * 0.014) };
+    }
+
+    function speckle(ctx, x, y, w, h, rnd, colors, count, maxR) {
+      for (var i = 0; i < count; i++) {
+        ctx.fillStyle = colors[(rnd() * colors.length) | 0];
+        ctx.globalAlpha = 0.1 + rnd() * 0.22;
+        var r = 0.5 + rnd() * maxR;
+        ctx.beginPath();
+        ctx.arc(x + rnd() * w, y + rnd() * h, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function render() {
+      var rect = ba.getBoundingClientRect();
+      var w = Math.max(1, Math.round(rect.width * DPR));
+      var h = Math.max(1, Math.round(rect.height * DPR));
+      [cvClean, cvDirty].forEach(function (cv) { cv.width = w; cv.height = h; });
+
+      var clean = cvClean.getContext('2d');
+      var dirty = cvDirty.getContext('2d');
+      var layout = paverLayout(w, h);
+      var jp = layout.joint;
+
+      clean.fillStyle = '#a9a294';
+      clean.fillRect(0, 0, w, h);
+      var rndC = mulberry32(31);
+      layout.stones.forEach(function (s) {
+        var v = Math.round(175 + s.tone * 45);
+        clean.fillStyle = 'rgb(' + (v - 6) + ',' + v + ',' + (v - 2) + ')';
+        clean.fillRect(s.x + jp / 2, s.y + jp / 2, s.w - jp, s.h - jp);
+        clean.fillStyle = 'rgba(255,255,255,0.35)';
+        clean.fillRect(s.x + jp / 2, s.y + jp / 2, s.w - jp, 1.5 * DPR);
+        clean.fillStyle = 'rgba(0,0,0,0.12)';
+        clean.fillRect(s.x + jp / 2, s.y + s.h - jp / 2 - 1.5 * DPR, s.w - jp, 1.5 * DPR);
+        speckle(clean, s.x + jp / 2, s.y + jp / 2, s.w - jp, s.h - jp, rndC, ['#8f9791', '#c8cec9', '#ffffff'], 26, 1.2 * DPR);
+      });
+
+      dirty.fillStyle = '#242119';
+      dirty.fillRect(0, 0, w, h);
+      var rndD = mulberry32(53);
+      layout.stones.forEach(function (s) {
+        var v = Math.round(64 + s.tone * 34);
+        dirty.fillStyle = 'rgb(' + (v + 6) + ',' + v + ',' + (v - 10) + ')';
+        dirty.fillRect(s.x + jp / 2, s.y + jp / 2, s.w - jp, s.h - jp);
+        speckle(dirty, s.x + jp / 2, s.y + jp / 2, s.w - jp, s.h - jp, rndD, ['#2f2a22', '#57503f', '#3d4a2e'], 40, 1.6 * DPR);
+        if (s.n1 > 0.45) {
+          var g = dirty.createRadialGradient(s.x + s.w / 2, s.y + s.h / 2, 1, s.x + s.w / 2, s.y + s.h / 2, s.w * 0.55);
+          g.addColorStop(0, 'rgba(18,15,9,' + (0.2 + s.n2 * 0.3) + ')');
+          g.addColorStop(1, 'rgba(18,15,9,0)');
+          dirty.fillStyle = g;
+          dirty.fillRect(s.x, s.y, s.w, s.h);
+        }
+        var rm = mulberry32((s.x * 13 + s.y * 7) | 0);
+        for (var m = 0; m < 5; m++) {
+          dirty.fillStyle = 'rgba(76,96,50,' + (0.3 + rm() * 0.35) + ')';
+          var edge = rm();
+          var mx, my;
+          if (edge < 0.5) { mx = s.x + rm() * s.w; my = s.y + (edge < 0.25 ? 0 : s.h); }
+          else { mx = s.x + (edge < 0.75 ? 0 : s.w); my = s.y + rm() * s.h; }
+          dirty.beginPath();
+          dirty.ellipse(mx, my, (4 + rm() * 16) * DPR, (2 + rm() * 8) * DPR, rm() * Math.PI, 0, Math.PI * 2);
+          dirty.fill();
+        }
+      });
+      var og = dirty.createRadialGradient(w * 0.32, h * 0.6, 2, w * 0.32, h * 0.6, w * 0.16);
+      og.addColorStop(0, 'rgba(10,10,12,0.55)');
+      og.addColorStop(0.7, 'rgba(10,10,12,0.25)');
+      og.addColorStop(1, 'rgba(10,10,12,0)');
+      dirty.fillStyle = og;
+      dirty.fillRect(0, 0, w, h);
+    }
+
+    var washed = false;
+    function autoWash() {
+      if (washed || userTouched) return;
+      washed = true;
+      if (reducedMotion) {
+        ba.style.setProperty('--pos', '55%');
+        range.value = 55;
+        return;
+      }
+      var start = null, from = 2, to = 62, dur = 2200;
+      function ease(x) { return 1 - Math.pow(1 - x, 3); }
+      function frame(ts) {
+        if (userTouched) return;
+        if (!start) start = ts;
+        var k = Math.min(1, (ts - start) / dur);
+        var v = from + (to - from) * ease(k);
+        ba.style.setProperty('--pos', v + '%');
+        range.value = v;
+        if (k < 1) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    render();
+    new IntersectionObserver(function (entries) {
+      if (entries[0].isIntersecting) autoWash();
+    }, { threshold: 0.45 }).observe(ba);
+
+    var t;
+    window.addEventListener('resize', function () {
+      clearTimeout(t); t = setTimeout(render, 150);
+    });
+  })();
+
+  /* ================= Service cards: cursor spotlight ================= */
+  (function spotlight() {
+    if (coarse) return;
+    document.querySelectorAll('.service').forEach(function (card) {
+      card.addEventListener('mousemove', function (e) {
+        var r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+        card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+      });
+    });
+  })();
+
+  /* ================= Ambient droplets + ripples behind contact ================= */
+  (function droplets() {
+    if (reducedMotion) return;
+    var cv = document.getElementById('dropFx');
+    var ctx = cv.getContext('2d');
+    var W = 0, H = 0, drops = [], ripples = [];
+
+    function resize() {
+      var r = cv.getBoundingClientRect();
+      W = Math.max(1, Math.round(r.width * DPR));
+      H = Math.max(1, Math.round(r.height * DPR));
+      cv.width = W; cv.height = H;
+      drops = [];
+      for (var i = 0; i < 40; i++) {
+        drops.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: (1 + Math.random() * 2.4) * DPR,
+          v: (0.4 + Math.random() * 1.4) * DPR,
+          a: 0.08 + Math.random() * 0.22
+        });
+      }
+    }
+
+    var running = false, raf = null;
+    function step() {
+      ctx.clearRect(0, 0, W, H);
+      var color = cssVar('--accent') || '#0c93b4';
+      var floor = H * 0.94;
+      for (var i = 0; i < drops.length; i++) {
+        var d = drops[i];
+        d.y += d.v;
+        if (d.y > floor) {
+          if (ripples.length < 12) {
+            ripples.push({ x: d.x, y: floor + Math.random() * (H - floor), r: d.r, a: 0.35 });
+          }
+          d.y = -10; d.x = Math.random() * W;
+        }
+        ctx.globalAlpha = d.a;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = d.a * 0.5;
+        ctx.fillRect(d.x - d.r * 0.25, d.y - d.r * 3.2, d.r * 0.5, d.r * 2.6);
+      }
+      ctx.strokeStyle = color;
+      for (var rp = ripples.length - 1; rp >= 0; rp--) {
+        var q = ripples[rp];
+        q.r += 0.9 * DPR; q.a -= 0.012;
+        if (q.a <= 0) { ripples.splice(rp, 1); continue; }
+        ctx.globalAlpha = q.a;
+        ctx.lineWidth = DPR;
+        ctx.beginPath();
+        ctx.ellipse(q.x, q.y, q.r, q.r * 0.32, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      raf = requestAnimationFrame(step);
+    }
+
+    resize();
+    new IntersectionObserver(function (entries) {
+      if (entries[0].isIntersecting && !running) {
+        running = true; raf = requestAnimationFrame(step);
+      } else if (!entries[0].isIntersecting && running) {
+        running = false; cancelAnimationFrame(raf);
+      }
+    }, { threshold: 0.05 }).observe(cv);
+    var t;
+    window.addEventListener('resize', function () {
+      clearTimeout(t); t = setTimeout(resize, 150);
+    });
+  })();
+
+  /* ================= Scroll reveals (plus the steps progress line) ================= */
+  (function reveals() {
+    var els = document.querySelectorAll('.reveal, .steps');
+    if (reducedMotion || !('IntersectionObserver' in window)) {
+      els.forEach(function (el) { el.classList.add('in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.18, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(function (el) { io.observe(el); });
+  })();
+})();
 </script>
+
 </body>
 </html>
