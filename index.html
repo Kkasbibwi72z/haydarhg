@@ -115,7 +115,6 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255,255,255,0.08);
-    transition: background 0.4s;
   }
   .nav {
     display: flex; align-items: center; justify-content: space-between;
@@ -148,13 +147,14 @@
   .hero::after {
     content: ""; position: absolute; inset: 0; pointer-events: none;
     background:
-      radial-gradient(120% 90% at 50% 110%, rgba(8,14,18,0) 55%, rgba(8,14,18,0.85) 100%),
+      radial-gradient(120% 90% at 50% 115%, rgba(8,14,18,0) 60%, rgba(8,14,18,0.8) 100%),
       linear-gradient(180deg, rgba(8,14,18,0.55) 0%, rgba(8,14,18,0) 30%);
   }
   .hero-content {
     position: relative; z-index: 2;
-    max-width: 1100px; margin: 0 auto; padding: 120px 24px 90px;
+    max-width: 1100px; margin: 0 auto; padding: 120px 24px 110px;
     width: 100%;
+    will-change: transform;
   }
   .hero h1 {
     font-size: clamp(48px, 8vw, 104px); margin: 0 0 24px;
@@ -186,8 +186,16 @@
     text-transform: uppercase; letter-spacing: 0.06em; font-size: 15px;
     background: var(--accent-bright); color: #06222c;
     border: 2px solid var(--accent-bright);
+    position: relative; overflow: hidden;
     transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s;
   }
+  .btn::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 40%;
+    left: -60%; transform: skewX(-20deg);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+    transition: left 0.5s ease;
+  }
+  .btn:hover::after { left: 130%; }
   .btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 30px rgba(62,205,235,0.35);
@@ -200,8 +208,13 @@
     display: flex; gap: 34px; margin-top: 44px; padding-top: 24px;
     border-top: 1px solid rgba(238,246,248,0.18); flex-wrap: wrap;
   }
-  .spec .mono { font-size: 24px; font-weight: 700; color: #eef6f8; display: block; }
+  .spec .mono { font-size: 24px; font-weight: 700; color: #eef6f8; display: block; min-width: 5.2ch; }
   .spec span:last-child { font-size: 12.5px; color: rgba(238,246,248,0.5); text-transform: uppercase; letter-spacing: 0.1em; }
+  .hero-hint {
+    margin-top: 20px; font-family: ui-monospace, Menlo, monospace;
+    font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: rgba(238,246,248,0.4);
+  }
   .scroll-hint {
     position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%);
     z-index: 2; color: rgba(238,246,248,0.55); font-size: 11px;
@@ -221,7 +234,6 @@
   .section-intro { color: var(--ink-soft); max-width: 40em; margin: 0 0 46px; }
 
   /* Before/after showcase */
-  #vergleich { background: var(--bg); }
   .ba-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 48px; align-items: center; }
   @media (max-width: 900px) { .ba-grid { grid-template-columns: 1fr; } }
   .ba {
@@ -232,6 +244,19 @@
   }
   .ba canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .ba .dirty { clip-path: inset(0 calc(100% - var(--pos, 55%)) 0 0); }
+  .ba .sheen {
+    position: absolute; inset: 0; pointer-events: none;
+    clip-path: inset(0 0 0 var(--pos, 55%));
+    background: linear-gradient(115deg, transparent 42%, rgba(255,255,255,0.3) 50%, transparent 58%);
+    background-size: 260% 100%;
+    background-repeat: no-repeat;
+    animation: sheenSweep 5s ease-in-out infinite;
+  }
+  @keyframes sheenSweep {
+    0%, 55% { background-position: 130% 0; }
+    100% { background-position: -80% 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .ba .sheen { animation: none; opacity: 0; } }
   .ba-handle {
     position: absolute; top: 0; bottom: 0; left: var(--pos, 55%);
     width: 3px; background: var(--accent-bright); transform: translateX(-50%);
@@ -278,6 +303,12 @@
   }
   .service:hover { transform: translateY(-3px); }
   .service:hover::before { transform: scaleY(1); }
+  .service svg {
+    width: 30px; height: 30px; color: var(--accent);
+    display: block; margin-bottom: 14px;
+    transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+  }
+  .service:hover svg { transform: translateY(-2px) scale(1.08); }
   .service .mono { font-size: 11px; color: var(--accent); letter-spacing: 0.18em; }
   .service h3 {
     font-family: "Arial Black", Arial, sans-serif; text-transform: uppercase;
@@ -308,7 +339,7 @@
   #kontakt { position: relative; overflow: hidden; }
   #dropFx {
     position: absolute; inset: 0; width: 100%; height: 100%;
-    display: block; pointer-events: none; opacity: 0.5;
+    display: block; pointer-events: none; opacity: 0.55;
   }
   #kontakt .wrap { position: relative; z-index: 1; }
   .contact-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px; }
@@ -332,7 +363,8 @@
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     .reveal { opacity: 1; transform: none; transition: none; }
-    .service, .btn { transition: none; }
+    .service, .btn, .service svg { transition: none; }
+    .btn::after { display: none; }
   }
 </style>
 </head>
@@ -356,7 +388,7 @@
 <main id="top">
   <div class="hero" id="hero">
     <canvas id="heroFx" aria-hidden="true"></canvas>
-    <div class="hero-content">
+    <div class="hero-content" id="heroContent">
       <p class="eyebrow hero-stage">Professionelle Flächenreinigung · 250 bar</p>
       <h1 class="display hero-stage s2">Schmutz hat<br>keine <span class="jet">Chance.</span></h1>
       <p class="lede hero-stage s3">
@@ -369,10 +401,11 @@
         <a class="btn ghost" href="#vergleich">Ergebnis ansehen</a>
       </div>
       <div class="specs hero-stage s4">
-        <div class="spec"><span class="mono">250&nbsp;bar</span><span>Arbeitsdruck</span></div>
-        <div class="spec"><span class="mono">500+</span><span>Gereinigte Flächen</span></div>
-        <div class="spec"><span class="mono">100&nbsp;%</span><span>Festpreis-Garantie</span></div>
+        <div class="spec"><span class="mono" data-count="250" data-suffix="&nbsp;bar">0&nbsp;bar</span><span>Arbeitsdruck</span></div>
+        <div class="spec"><span class="mono" data-count="500" data-suffix="+">0+</span><span>Gereinigte Flächen</span></div>
+        <div class="spec"><span class="mono" data-count="100" data-suffix="&nbsp;%">0&nbsp;%</span><span>Festpreis-Garantie</span></div>
       </div>
+      <p class="hero-hint hero-stage s4" id="heroHint">← Maus bewegen: Sie führen den Strahl</p>
     </div>
     <span class="scroll-hint" aria-hidden="true">▼ Scrollen</span>
   </div>
@@ -392,6 +425,7 @@
           <div class="ba" id="ba" style="--pos: 2%;">
             <canvas class="clean" id="cvClean" aria-hidden="true"></canvas>
             <canvas class="dirty" id="cvDirty" aria-hidden="true"></canvas>
+            <div class="sheen" aria-hidden="true"></div>
             <div class="ba-handle" aria-hidden="true"></div>
             <span class="ba-label before" aria-hidden="true">VORHER</span>
             <span class="ba-label after" aria-hidden="true">NACHHER</span>
@@ -415,31 +449,49 @@
       </p>
       <div class="services reveal d1">
         <div class="service">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 6h18M3 11h18M3 16h18M3 21h18M8 6v15M16 6v15"/>
+          </svg>
           <span class="mono">FLÄCHE</span>
           <h3>Terrassen &amp; Wege</h3>
           <p>Holz, WPC, Naturstein und Betonplatten — grünbelagfrei und rutschsicher, ohne die Oberfläche aufzurauen.</p>
         </div>
         <div class="service">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 3 3 21M16 3l5 18M12 4v3M12 11v3M12 18v3"/>
+          </svg>
           <span class="mono">FLÄCHE</span>
           <h3>Einfahrten &amp; Pflaster</h3>
           <p>Ölflecken, Moos und Verwitterung verschwinden. Auf Wunsch mit neuem Fugensand und Versiegelung.</p>
         </div>
         <div class="service">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 10 12 3l8 7M6 10v11h12V10M10 14h4v7h-4z"/>
+          </svg>
           <span class="mono">GEBÄUDE</span>
           <h3>Fassaden</h3>
           <p>Algen- und Grünbelag schonend entfernen — mit angepasstem Druck, damit Putz und Anstrich intakt bleiben.</p>
         </div>
         <div class="service">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M2 13 12 4l10 9M17 8V5h3v6M7 13v7M12 13v7M17 15v5"/>
+          </svg>
           <span class="mono">GEBÄUDE</span>
           <h3>Dächer &amp; Dachrinnen</h3>
           <p>Moosentfernung und freie Abläufe für den nächsten Regen — inklusive Sichtprüfung der Eindeckung.</p>
         </div>
         <div class="service">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 9h6v12H9zM10 9V6h4v3M12 3v2M17 4l1.5-1.5M19 8h2"/>
+          </svg>
           <span class="mono">SPEZIAL</span>
           <h3>Graffiti-Entfernung</h3>
           <p>Farbschichten von Wänden, Toren und Schildern lösen — punktgenau und ohne Schattenbildung, wo möglich.</p>
         </div>
         <div class="service">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 8l2-2 2 2v13H5zM11 8l2-2 2 2v13h-4zM17 8l2-2 2 2v13h-4zM2 13h1M22 13h-1"/>
+          </svg>
           <span class="mono">SPEZIAL</span>
           <h3>Zäune, Mauern &amp; Mülltonnenplätze</h3>
           <p>Alles, was draußen steht und Wetter abbekommt — auf Anfrage auch regelmäßig im Pflegeintervall.</p>
@@ -545,102 +597,218 @@
     };
   }
 
-  /* ================= HERO: high-pressure water jet ================= */
+  /* ============================================================
+     HERO: interactive high-pressure jet that really cleans the
+     ground. A dirt layer sits on top of clean pavers; wherever
+     the jet hits, the dirt is erased (and slowly grows back).
+     ============================================================ */
   (function heroJet() {
     var cv = document.getElementById('heroFx');
+    var hero = document.getElementById('hero');
     var ctx = cv.getContext('2d');
-    var W = 0, H = 0, ground = 0;
-    var particles = [];
-    var mist = [];
-    var t = 0;
+    var W = 0, H = 0, ground = 0, groundH = 0;
+    var bg = document.createElement('canvas');       // static night scene + clean pavers
+    var dirt = document.createElement('canvas');     // erodible dirt on the ground strip
+    var dirtFull = document.createElement('canvas'); // pristine dirt copy for slow regrowth
+    var particles = [], foam = [], mist = [];
+    var t = 0, mouseX = null;
+
+    var bokeh = [
+      { fx: 0.10, fy: 0.16, r: 70, hue: 'rgba(255,214,150,' },
+      { fx: 0.38, fy: 0.09, r: 46, hue: 'rgba(200,230,245,' },
+      { fx: 0.62, fy: 0.14, r: 58, hue: 'rgba(255,214,150,' },
+      { fx: 0.88, fy: 0.08, r: 40, hue: 'rgba(200,230,245,' }
+    ];
+
+    function paintPavers(c, w, h, tone) {
+      // running-bond pavers with per-stone variation
+      var rnd = mulberry32(99);
+      var rows = 3, bw = w / 9;
+      var bh = h / rows;
+      c.fillStyle = tone.joint;
+      c.fillRect(0, 0, w, h);
+      var jointPx = Math.max(1.5 * DPR, h * 0.02);
+      for (var r = 0; r < rows; r++) {
+        var off = (r % 2) * bw * 0.5;
+        for (var x = -bw; x < w + bw; x += bw) {
+          var bx = x + off, by = r * bh;
+          var shade = 0.85 + rnd() * 0.3;
+          c.fillStyle = tone.stone(shade);
+          c.fillRect(bx + jointPx / 2, by + jointPx / 2, bw - jointPx, bh - jointPx);
+          // subtle top highlight per stone (wet look)
+          c.fillStyle = 'rgba(255,255,255,' + (0.03 + rnd() * 0.05) + ')';
+          c.fillRect(bx + jointPx / 2, by + jointPx / 2, bw - jointPx, bh * 0.18);
+        }
+      }
+    }
+
+    function renderBG() {
+      bg.width = W; bg.height = H;
+      var c = bg.getContext('2d');
+      // night sky gradient
+      var g = c.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#0a1116');
+      g.addColorStop(0.62, '#0c141a');
+      g.addColorStop(0.86, '#111d25');
+      g.addColorStop(1, '#0c161d');
+      c.fillStyle = g;
+      c.fillRect(0, 0, W, H);
+      // faint atmospheric haze bands
+      var rnd = mulberry32(11);
+      for (var j = 0; j < 150; j++) {
+        c.fillStyle = 'rgba(160,200,215,' + (rnd() * 0.05) + ')';
+        c.beginPath();
+        c.arc(rnd() * W, rnd() * ground, rnd() * 1.4 * DPR, 0, Math.PI * 2);
+        c.fill();
+      }
+      // clean wet pavers on the ground strip (revealed as dirt erodes)
+      c.save();
+      c.translate(0, ground);
+      paintPavers(c, W, groundH, {
+        joint: '#131f26',
+        stone: function (s) {
+          var v = Math.round(52 * s);
+          return 'rgb(' + (v + 14) + ',' + (v + 26) + ',' + (v + 34) + ')';
+        }
+      });
+      // cyan wet reflections on clean pavers
+      for (var i = 0; i < 70; i++) {
+        c.fillStyle = 'rgba(120,210,235,' + (0.03 + rnd() * 0.08) + ')';
+        c.fillRect(rnd() * W, rnd() * groundH, (14 + rnd() * 100) * DPR / 2, DPR);
+      }
+      c.restore();
+    }
+
+    function renderDirt() {
+      dirt.width = W; dirt.height = groundH;
+      var c = dirt.getContext('2d');
+      // opaque grime blanket over the pavers
+      var g = c.createLinearGradient(0, 0, 0, groundH);
+      g.addColorStop(0, '#2c2921');
+      g.addColorStop(1, '#211f19');
+      c.fillStyle = g;
+      c.fillRect(0, 0, W, groundH);
+      var rnd = mulberry32(23);
+      for (var i = 0; i < 260; i++) {
+        c.fillStyle = ['#38332a', '#1d1b15', '#3d4a2e', '#46412f'][(rnd() * 4) | 0];
+        c.globalAlpha = 0.15 + rnd() * 0.3;
+        c.beginPath();
+        c.ellipse(rnd() * W, rnd() * groundH, (4 + rnd() * 30) * DPR, (2 + rnd() * 8) * DPR, rnd() * Math.PI, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.globalAlpha = 1;
+      // moss ridges
+      for (var m = 0; m < 40; m++) {
+        c.fillStyle = 'rgba(74,94,48,' + (0.25 + rnd() * 0.35) + ')';
+        c.beginPath();
+        c.ellipse(rnd() * W, rnd() * groundH, (8 + rnd() * 40) * DPR, (2 + rnd() * 5) * DPR, 0, 0, Math.PI * 2);
+        c.fill();
+      }
+      // keep a pristine copy for regrowth
+      dirtFull.width = W; dirtFull.height = groundH;
+      dirtFull.getContext('2d').drawImage(dirt, 0, 0);
+    }
 
     function resize() {
       var r = cv.getBoundingClientRect();
       W = Math.max(1, Math.round(r.width * DPR));
       H = Math.max(1, Math.round(r.height * DPR));
       cv.width = W; cv.height = H;
-      ground = H * 0.86;
-      drawStatic();
-    }
-
-    function drawStatic() {
-      // wet asphalt: dark gradient ground with a cyan sheen strip + speckle
-      var g = ctx.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, '#0a1116');
-      g.addColorStop(0.62, '#0c141a');
-      g.addColorStop(0.86, '#101c23');
-      g.addColorStop(1, '#0a1218');
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
-      // ground plane
-      var gg = ctx.createLinearGradient(0, ground, 0, H);
-      gg.addColorStop(0, '#16242c');
-      gg.addColorStop(1, '#0b1319');
-      ctx.fillStyle = gg;
-      ctx.fillRect(0, ground, W, H - ground);
-      // wet reflections on ground
-      var rnd = mulberry32(42);
-      for (var i = 0; i < 90; i++) {
-        var x = rnd() * W, y = ground + rnd() * (H - ground);
-        ctx.fillStyle = 'rgba(120,200,220,' + (0.02 + rnd() * 0.06) + ')';
-        ctx.fillRect(x, y, (10 + rnd() * 90) * DPR / 2, DPR);
-      }
-      // distant haze speckle
-      for (var j = 0; j < 160; j++) {
-        ctx.fillStyle = 'rgba(160,200,215,' + (rnd() * 0.05) + ')';
-        ctx.beginPath();
-        ctx.arc(rnd() * W, rnd() * ground, rnd() * 1.4 * DPR, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ground = Math.round(H * 0.84);
+      groundH = H - ground;
+      renderBG();
+      renderDirt();
+      if (reducedMotion) staticFrame();
     }
 
     function nozzle() {
-      // lance tip lower right, sweeping slowly
-      var sweep = Math.sin(t * 0.011) * 0.12;
-      return {
-        x: W * 0.86,
-        y: H * 0.74,
-        a: Math.PI + 0.32 + sweep  // pointing left, slightly down
-      };
+      return { x: W * 0.88, y: H * 0.70 };
+    }
+    function targetX() {
+      if (mouseX !== null) {
+        return Math.max(W * 0.06, Math.min(W * 0.8, mouseX));
+      }
+      return W * (0.42 + 0.3 * Math.sin(t * 0.008));
     }
 
     function spawn() {
       var n = nozzle();
-      var count = 26;
-      for (var i = 0; i < count; i++) {
-        var spread = (Math.random() - 0.5) * 0.14;
-        var speed = (16 + Math.random() * 14) * DPR;
+      var tx = targetX();
+      var dx = tx - n.x, dy = ground - n.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      var a = Math.atan2(dy, dx);
+      var speed = dist / 26; // reach target in ~26 frames
+      for (var i = 0; i < 22; i++) {
+        var spread = (Math.random() - 0.5) * 0.1;
+        var sp = speed * (0.85 + Math.random() * 0.35);
         particles.push({
           x: n.x, y: n.y,
-          vx: Math.cos(n.a + spread) * speed,
-          vy: Math.sin(n.a + spread) * speed,
+          vx: Math.cos(a + spread) * sp,
+          vy: Math.sin(a + spread) * sp,
           life: 1,
-          decay: 0.012 + Math.random() * 0.02,
+          decay: 0.014 + Math.random() * 0.02,
           r: (0.8 + Math.random() * 2.2) * DPR,
           splash: false
         });
       }
-      if (mist.length < 26 && Math.random() > 0.6) {
+      if (mist.length < 24 && Math.random() > 0.55) {
         mist.push({
-          x: n.x - Math.random() * W * 0.5,
-          y: n.y - Math.random() * H * 0.2,
+          x: tx + (Math.random() - 0.5) * W * 0.25,
+          y: ground - Math.random() * H * 0.16,
           r: (30 + Math.random() * 90) * DPR,
-          vx: -(0.3 + Math.random() * 0.7) * DPR,
-          vy: -(0.05 + Math.random() * 0.25) * DPR,
+          vx: -(0.2 + Math.random() * 0.6) * DPR,
+          vy: -(0.1 + Math.random() * 0.3) * DPR,
           life: 1,
-          decay: 0.003 + Math.random() * 0.004
+          decay: 0.004 + Math.random() * 0.005
         });
       }
-      if (particles.length > 1600) particles.splice(0, particles.length - 1600);
+      if (particles.length > 1500) particles.splice(0, particles.length - 1500);
+    }
+
+    var dirtCtx = null;
+    function erodeAt(x) {
+      if (!dirtCtx) dirtCtx = dirt.getContext('2d');
+      var r = 26 * DPR;
+      var y = Math.random() * groundH * 0.9;
+      dirtCtx.globalCompositeOperation = 'destination-out';
+      var g = dirtCtx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, 'rgba(0,0,0,0.5)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      dirtCtx.fillStyle = g;
+      dirtCtx.beginPath(); dirtCtx.arc(x, y, r, 0, Math.PI * 2); dirtCtx.fill();
+      dirtCtx.globalCompositeOperation = 'source-over';
+    }
+
+    function regrowDirt() {
+      if (!dirtCtx) dirtCtx = dirt.getContext('2d');
+      dirtCtx.globalAlpha = 0.0022;
+      dirtCtx.drawImage(dirtFull, 0, 0);
+      dirtCtx.globalAlpha = 1;
     }
 
     function step() {
       t++;
       spawn();
-      drawStatic();
+      regrowDirt();
 
-      // mist first (soft, behind jet)
+      ctx.drawImage(bg, 0, 0);
+      ctx.drawImage(dirt, 0, ground);
+
+      // street-light bokeh, gently pulsing
       ctx.globalCompositeOperation = 'lighter';
+      for (var b = 0; b < bokeh.length; b++) {
+        var bo = bokeh[b];
+        var pul = 0.75 + 0.25 * Math.sin(t * 0.02 + b * 1.7);
+        var br = bo.r * DPR;
+        var bgd = ctx.createRadialGradient(bo.fx * W, bo.fy * H, 0, bo.fx * W, bo.fy * H, br);
+        bgd.addColorStop(0, bo.hue + (0.10 * pul) + ')');
+        bgd.addColorStop(0.4, bo.hue + (0.04 * pul) + ')');
+        bgd.addColorStop(1, bo.hue + '0)');
+        ctx.fillStyle = bgd;
+        ctx.beginPath(); ctx.arc(bo.fx * W, bo.fy * H, br, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // mist
       for (var m = mist.length - 1; m >= 0; m--) {
         var f = mist[m];
         f.x += f.vx; f.y += f.vy; f.life -= f.decay;
@@ -652,30 +820,53 @@
         ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
       }
 
+      // coherent jet beam under the particles
+      var n = nozzle();
+      var tx = targetX();
+      var beam = ctx.createLinearGradient(n.x, n.y, tx, ground);
+      beam.addColorStop(0, 'rgba(210,242,252,0.30)');
+      beam.addColorStop(1, 'rgba(210,242,252,0.02)');
+      ctx.fillStyle = beam;
+      ctx.beginPath();
+      ctx.moveTo(n.x, n.y - 2 * DPR);
+      ctx.lineTo(tx - 16 * DPR, ground);
+      ctx.lineTo(tx + 16 * DPR, ground);
+      ctx.lineTo(n.x, n.y + 2 * DPR);
+      ctx.closePath();
+      ctx.fill();
+
       // jet particles
-      var grav = 0.32 * DPR;
+      var grav = 0.3 * DPR;
       for (var i = particles.length - 1; i >= 0; i--) {
         var p = particles[i];
         p.x += p.vx; p.y += p.vy;
-        p.vy += grav; p.vx *= 0.992;
+        p.vy += grav; p.vx *= 0.994;
         p.life -= p.decay;
         if (!p.splash && p.y >= ground) {
-          // splash: bounce up as fine spray
           p.splash = true;
           p.y = ground;
-          p.vy = -Math.abs(p.vy) * (0.15 + Math.random() * 0.25);
-          p.vx *= 0.4 + Math.random() * 0.3;
+          erodeAt(p.x);
+          if (foam.length < 220 && Math.random() > 0.4) {
+            foam.push({
+              x: p.x + (Math.random() - 0.5) * 14 * DPR,
+              y: ground + Math.random() * groundH * 0.5,
+              r: (0.8 + Math.random() * 2.4) * DPR,
+              life: 1,
+              decay: 0.01 + Math.random() * 0.025,
+              vx: (Math.random() - 0.5) * 1.2 * DPR
+            });
+          }
+          p.vy = -Math.abs(p.vy) * (0.16 + Math.random() * 0.24);
+          p.vx *= 0.35 + Math.random() * 0.3;
           p.life = Math.min(p.life, 0.5);
           p.r *= 0.7;
         }
         if (p.life <= 0 || p.x < -50 || p.y > H + 50) { particles.splice(i, 1); continue; }
-        var a = p.life;
-        var core = p.splash ? 'rgba(200,240,250,' : 'rgba(225,248,255,';
-        ctx.fillStyle = core + (a * 0.85) + ')';
+        var al = p.life;
+        ctx.fillStyle = (p.splash ? 'rgba(200,240,250,' : 'rgba(225,248,255,') + (al * 0.85) + ')';
         ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
         if (!p.splash) {
-          // glow trail
-          ctx.strokeStyle = 'rgba(62,205,235,' + (a * 0.28) + ')';
+          ctx.strokeStyle = 'rgba(62,205,235,' + (al * 0.26) + ')';
           ctx.lineWidth = p.r * 0.9;
           ctx.beginPath();
           ctx.moveTo(p.x, p.y);
@@ -684,28 +875,71 @@
         }
       }
 
-      // nozzle glow + lance
-      var n = nozzle();
-      var ng = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, 60 * DPR);
-      ng.addColorStop(0, 'rgba(180,235,250,0.55)');
+      // impact glow at the strike point
+      var ig = ctx.createRadialGradient(tx, ground, 0, tx, ground, 70 * DPR);
+      ig.addColorStop(0, 'rgba(190,240,252,0.35)');
+      ig.addColorStop(1, 'rgba(190,240,252,0)');
+      ctx.fillStyle = ig;
+      ctx.beginPath(); ctx.arc(tx, ground, 70 * DPR, 0, Math.PI * 2); ctx.fill();
+
+      // nozzle glow
+      var ng = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, 55 * DPR);
+      ng.addColorStop(0, 'rgba(180,235,250,0.5)');
       ng.addColorStop(1, 'rgba(180,235,250,0)');
       ctx.fillStyle = ng;
-      ctx.beginPath(); ctx.arc(n.x, n.y, 60 * DPR, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(n.x, n.y, 55 * DPR, 0, Math.PI * 2); ctx.fill();
+
       ctx.globalCompositeOperation = 'source-over';
-      // lance silhouette
-      ctx.strokeStyle = '#1d2c35';
-      ctx.lineWidth = 7 * DPR;
+
+      // foam bubbles drifting on the washed ground
+      for (var fb = foam.length - 1; fb >= 0; fb--) {
+        var q = foam[fb];
+        q.x += q.vx; q.life -= q.decay;
+        if (q.life <= 0) { foam.splice(fb, 1); continue; }
+        ctx.fillStyle = 'rgba(235,250,255,' + (q.life * 0.55) + ')';
+        ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // lance silhouette with grip
+      var la = Math.atan2(ground - n.y, tx - n.x);
+      ctx.strokeStyle = '#22333d';
       ctx.lineCap = 'round';
+      ctx.lineWidth = 7 * DPR;
       ctx.beginPath();
       ctx.moveTo(n.x, n.y);
-      ctx.lineTo(n.x - Math.cos(n.a) * -90 * DPR, n.y - Math.sin(n.a) * -90 * DPR);
+      ctx.lineTo(n.x - Math.cos(la) * 95 * DPR, n.y - Math.sin(la) * 95 * DPR);
+      ctx.stroke();
+      ctx.lineWidth = 12 * DPR;
+      ctx.beginPath();
+      ctx.moveTo(n.x - Math.cos(la) * 60 * DPR, n.y - Math.sin(la) * 60 * DPR);
+      ctx.lineTo(n.x - Math.cos(la) * 92 * DPR, n.y - Math.sin(la) * 92 * DPR);
       ctx.stroke();
 
       raf = requestAnimationFrame(step);
     }
 
-    var raf = null;
-    var running = false;
+    function staticFrame() {
+      // single painted frame for reduced motion
+      ctx.drawImage(bg, 0, 0);
+      // pre-erode a clean swath so the promise is visible
+      for (var i = 0; i < 260; i++) erodeAt(W * 0.3 + Math.random() * W * 0.3);
+      ctx.drawImage(dirt, 0, ground);
+      var n = nozzle();
+      ctx.globalCompositeOperation = 'lighter';
+      var jg = ctx.createLinearGradient(n.x, n.y, W * 0.45, ground);
+      jg.addColorStop(0, 'rgba(200,240,252,0.5)');
+      jg.addColorStop(1, 'rgba(200,240,252,0)');
+      ctx.fillStyle = jg;
+      ctx.beginPath();
+      ctx.moveTo(n.x, n.y);
+      ctx.lineTo(W * 0.42, ground - 6 * DPR);
+      ctx.lineTo(W * 0.52, ground + 4 * DPR);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    var raf = null, running = false;
     function start() {
       if (running || reducedMotion) return;
       running = true;
@@ -717,35 +951,68 @@
     }
 
     resize();
-    if (reducedMotion) {
-      // static frame with a painted jet cone
-      var n = nozzle();
-      ctx.globalCompositeOperation = 'lighter';
-      var jg = ctx.createLinearGradient(n.x, n.y, W * 0.2, ground);
-      jg.addColorStop(0, 'rgba(200,240,252,0.5)');
-      jg.addColorStop(1, 'rgba(200,240,252,0)');
-      ctx.fillStyle = jg;
-      ctx.beginPath();
-      ctx.moveTo(n.x, n.y);
-      ctx.lineTo(W * 0.18, ground - 8 * DPR);
-      ctx.lineTo(W * 0.3, ground + 6 * DPR);
-      ctx.closePath();
-      ctx.fill();
-      ctx.globalCompositeOperation = 'source-over';
-    } else {
+    if (!reducedMotion) {
       start();
-      // pause when hero is offscreen (battery + perf)
       new IntersectionObserver(function (entries) {
         entries[0].isIntersecting ? start() : stop();
       }, { threshold: 0.05 }).observe(cv);
+
+      hero.addEventListener('mousemove', function (e) {
+        var r = cv.getBoundingClientRect();
+        mouseX = (e.clientX - r.left) * DPR;
+      });
+      hero.addEventListener('mouseleave', function () { mouseX = null; });
+      hero.addEventListener('touchmove', function (e) {
+        var r = cv.getBoundingClientRect();
+        mouseX = (e.touches[0].clientX - r.left) * DPR;
+      }, { passive: true });
+      hero.addEventListener('touchend', function () { mouseX = null; });
+
+      // gentle parallax of the copy while the hero scrolls away
+      var content = document.getElementById('heroContent');
+      window.addEventListener('scroll', function () {
+        var y = window.scrollY;
+        if (y < window.innerHeight) {
+          content.style.transform = 'translateY(' + (y * 0.22) + 'px)';
+        }
+      }, { passive: true });
     }
     var rt;
     window.addEventListener('resize', function () {
       clearTimeout(rt); rt = setTimeout(resize, 150);
     });
-    // headline entrance
     requestAnimationFrame(function () {
-      document.getElementById('hero').classList.add('hero-play');
+      hero.classList.add('hero-play');
+    });
+    // touch devices: hint text does not apply
+    if (window.matchMedia('(pointer: coarse)').matches) {
+      document.getElementById('heroHint').textContent = '← Finger bewegen: Sie führen den Strahl';
+    }
+  })();
+
+  /* ================= Animated stat counters ================= */
+  (function counters() {
+    var els = document.querySelectorAll('.spec .mono[data-count]');
+    if (reducedMotion) {
+      els.forEach(function (el) {
+        el.innerHTML = el.getAttribute('data-count') + el.getAttribute('data-suffix');
+      });
+      return;
+    }
+    function ease(x) { return 1 - Math.pow(1 - x, 3); }
+    els.forEach(function (el) {
+      var target = parseInt(el.getAttribute('data-count'), 10);
+      var suffix = el.getAttribute('data-suffix');
+      var start = null, dur = 1700, delay = 900;
+      setTimeout(function () {
+        function frame(ts) {
+          if (!start) start = ts;
+          var k = Math.min(1, (ts - start) / dur);
+          el.innerHTML = Math.round(target * ease(k)) + suffix;
+          if (k < 1) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+      }, delay);
     });
   })();
 
@@ -762,31 +1029,24 @@
       ba.style.setProperty('--pos', range.value + '%');
     });
 
-    function drawSlabs(ctx, w, h, base, jointColor, painter) {
-      ctx.fillStyle = base;
-      ctx.fillRect(0, 0, w, h);
-      var cols = 4, rows = 3;
-      var cw = w / cols, ch = h / rows;
+    // running-bond paver layout shared by both canvases (same seed = same stones)
+    function paverLayout(w, h) {
+      var rows = 5, bw = w / 8, bh = h / rows;
+      var stones = [];
       var rnd = mulberry32(7);
       for (var r = 0; r < rows; r++) {
-        for (var c = 0; c < cols; c++) {
-          painter(ctx, c * cw, r * ch, cw, ch, rnd);
+        var off = (r % 2) * bw * 0.5;
+        for (var x = -bw; x < w + bw; x += bw) {
+          stones.push({ x: x + off, y: r * bh, w: bw, h: bh, tone: rnd(), n1: rnd(), n2: rnd() });
         }
       }
-      ctx.strokeStyle = jointColor;
-      ctx.lineWidth = Math.max(2, w * 0.006);
-      for (var i = 1; i < cols; i++) {
-        ctx.beginPath(); ctx.moveTo(i * cw, 0); ctx.lineTo(i * cw, h); ctx.stroke();
-      }
-      for (var j = 1; j < rows; j++) {
-        ctx.beginPath(); ctx.moveTo(0, j * ch); ctx.lineTo(w, j * ch); ctx.stroke();
-      }
+      return { stones: stones, joint: Math.max(2 * DPR, h * 0.014) };
     }
 
     function speckle(ctx, x, y, w, h, rnd, colors, count, maxR) {
       for (var i = 0; i < count; i++) {
         ctx.fillStyle = colors[(rnd() * colors.length) | 0];
-        ctx.globalAlpha = 0.12 + rnd() * 0.25;
+        ctx.globalAlpha = 0.1 + rnd() * 0.22;
         var r = 0.5 + rnd() * maxR;
         ctx.beginPath();
         ctx.arc(x + rnd() * w, y + rnd() * h, r, 0, Math.PI * 2);
@@ -803,34 +1063,62 @@
 
       var clean = cvClean.getContext('2d');
       var dirty = cvDirty.getContext('2d');
-      var cleanBase = cssVar('--hero-clean') || '#d7dcda';
-      var dirtyBase = cssVar('--hero-dirty') || '#4a4238';
+      var layout = paverLayout(w, h);
+      var jp = layout.joint;
 
-      drawSlabs(clean, w, h, cleanBase, 'rgba(0,0,0,0.28)', function (ctx, x, y, cw, ch, rnd) {
-        ctx.fillStyle = 'rgba(255,255,255,' + (0.03 + rnd() * 0.07) + ')';
-        ctx.fillRect(x, y, cw, ch);
-        speckle(ctx, x, y, cw, ch, rnd, ['#9aa5a1', '#c2cac6', '#ffffff'], 220, 1.4 * DPR);
+      /* --- NACHHER: fresh pavers, sanded joints, light speckle --- */
+      clean.fillStyle = '#a9a294'; // fresh joint sand
+      clean.fillRect(0, 0, w, h);
+      var rndC = mulberry32(31);
+      layout.stones.forEach(function (s) {
+        var v = Math.round(175 + s.tone * 45);
+        clean.fillStyle = 'rgb(' + (v - 6) + ',' + v + ',' + (v - 2) + ')';
+        clean.fillRect(s.x + jp / 2, s.y + jp / 2, s.w - jp, s.h - jp);
+        // bevel: light top edge, shadow bottom edge
+        clean.fillStyle = 'rgba(255,255,255,0.35)';
+        clean.fillRect(s.x + jp / 2, s.y + jp / 2, s.w - jp, 1.5 * DPR);
+        clean.fillStyle = 'rgba(0,0,0,0.12)';
+        clean.fillRect(s.x + jp / 2, s.y + s.h - jp / 2 - 1.5 * DPR, s.w - jp, 1.5 * DPR);
+        speckle(clean, s.x + jp / 2, s.y + jp / 2, s.w - jp, s.h - jp, rndC, ['#8f9791', '#c8cec9', '#ffffff'], 26, 1.2 * DPR);
       });
 
-      drawSlabs(dirty, w, h, dirtyBase, 'rgba(0,0,0,0.5)', function (ctx, x, y, cw, ch, rnd) {
-        ctx.fillStyle = 'rgba(0,0,0,' + (0.05 + rnd() * 0.16) + ')';
-        ctx.fillRect(x, y, cw, ch);
-        speckle(ctx, x, y, cw, ch, rnd, ['#2f2a22', '#5a5245', '#3d4a2e'], 260, 1.6 * DPR);
-        for (var m = 0; m < 4; m++) {
-          ctx.fillStyle = 'rgba(76,92,52,' + (0.25 + rnd() * 0.3) + ')';
-          var mx = x + rnd() * cw, my = y + rnd() * ch;
-          ctx.beginPath();
-          ctx.ellipse(mx, my, (6 + rnd() * 26) * DPR, (4 + rnd() * 14) * DPR, rnd() * Math.PI, 0, Math.PI * 2);
-          ctx.fill();
+      /* --- VORHER: same stones under grime, moss in the joints, stains --- */
+      dirty.fillStyle = '#242119'; // rotted joints
+      dirty.fillRect(0, 0, w, h);
+      var rndD = mulberry32(53);
+      layout.stones.forEach(function (s) {
+        var v = Math.round(64 + s.tone * 34);
+        dirty.fillStyle = 'rgb(' + (v + 6) + ',' + v + ',' + (v - 10) + ')';
+        dirty.fillRect(s.x + jp / 2, s.y + jp / 2, s.w - jp, s.h - jp);
+        speckle(dirty, s.x + jp / 2, s.y + jp / 2, s.w - jp, s.h - jp, rndD, ['#2f2a22', '#57503f', '#3d4a2e'], 40, 1.6 * DPR);
+        // weathering blotch
+        if (s.n1 > 0.45) {
+          var g = dirty.createRadialGradient(s.x + s.w / 2, s.y + s.h / 2, 1, s.x + s.w / 2, s.y + s.h / 2, s.w * 0.55);
+          g.addColorStop(0, 'rgba(18,15,9,' + (0.2 + s.n2 * 0.3) + ')');
+          g.addColorStop(1, 'rgba(18,15,9,0)');
+          dirty.fillStyle = g;
+          dirty.fillRect(s.x, s.y, s.w, s.h);
         }
-        if (rnd() > 0.55) {
-          var g = ctx.createRadialGradient(x + cw / 2, y + ch / 2, 2, x + cw / 2, y + ch / 2, cw * 0.5);
-          g.addColorStop(0, 'rgba(20,16,10,0.4)');
-          g.addColorStop(1, 'rgba(20,16,10,0)');
-          ctx.fillStyle = g;
-          ctx.fillRect(x, y, cw, ch);
+        // moss creeping from the joints onto the stone
+        var rm = mulberry32((s.x * 13 + s.y * 7) | 0);
+        for (var m = 0; m < 5; m++) {
+          dirty.fillStyle = 'rgba(76,96,50,' + (0.3 + rm() * 0.35) + ')';
+          var edge = rm();
+          var mx, my;
+          if (edge < 0.5) { mx = s.x + rm() * s.w; my = s.y + (edge < 0.25 ? 0 : s.h); }
+          else { mx = s.x + (edge < 0.75 ? 0 : s.w); my = s.y + rm() * s.h; }
+          dirty.beginPath();
+          dirty.ellipse(mx, my, (4 + rm() * 16) * DPR, (2 + rm() * 8) * DPR, rm() * Math.PI, 0, Math.PI * 2);
+          dirty.fill();
         }
       });
+      // one big oil stain
+      var og = dirty.createRadialGradient(w * 0.32, h * 0.6, 2, w * 0.32, h * 0.6, w * 0.16);
+      og.addColorStop(0, 'rgba(10,10,12,0.55)');
+      og.addColorStop(0.7, 'rgba(10,10,12,0.25)');
+      og.addColorStop(1, 'rgba(10,10,12,0)');
+      dirty.fillStyle = og;
+      dirty.fillRect(0, 0, w, h);
     }
 
     // auto-wash: sweep the reveal once when scrolled into view
@@ -866,17 +1154,14 @@
     window.addEventListener('resize', function () {
       clearTimeout(t); t = setTimeout(render, 150);
     });
-    var mq = window.matchMedia('(prefers-color-scheme: dark)');
-    if (mq.addEventListener) mq.addEventListener('change', render);
-    new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   })();
 
-  /* ================= Ambient droplets behind contact ================= */
+  /* ================= Ambient droplets + ripples behind contact ================= */
   (function droplets() {
     if (reducedMotion) return;
     var cv = document.getElementById('dropFx');
     var ctx = cv.getContext('2d');
-    var W = 0, H = 0, drops = [];
+    var W = 0, H = 0, drops = [], ripples = [];
 
     function resize() {
       var r = cv.getBoundingClientRect();
@@ -899,18 +1184,35 @@
     function step() {
       ctx.clearRect(0, 0, W, H);
       var color = cssVar('--accent') || '#0c93b4';
+      var floor = H * 0.94;
       for (var i = 0; i < drops.length; i++) {
         var d = drops[i];
         d.y += d.v;
-        if (d.y > H + 10) { d.y = -10; d.x = Math.random() * W; }
+        if (d.y > floor) {
+          if (ripples.length < 12) {
+            ripples.push({ x: d.x, y: floor + Math.random() * (H - floor), r: d.r, a: 0.35 });
+          }
+          d.y = -10; d.x = Math.random() * W;
+        }
         ctx.globalAlpha = d.a;
         ctx.fillStyle = color;
         ctx.beginPath();
-        // teardrop: circle + small tail
         ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = d.a * 0.5;
         ctx.fillRect(d.x - d.r * 0.25, d.y - d.r * 3.2, d.r * 0.5, d.r * 2.6);
+      }
+      // expanding ripple rings where drops land
+      ctx.strokeStyle = color;
+      for (var rp = ripples.length - 1; rp >= 0; rp--) {
+        var q = ripples[rp];
+        q.r += 0.9 * DPR; q.a -= 0.012;
+        if (q.a <= 0) { ripples.splice(rp, 1); continue; }
+        ctx.globalAlpha = q.a;
+        ctx.lineWidth = DPR;
+        ctx.beginPath();
+        ctx.ellipse(q.x, q.y, q.r, q.r * 0.32, 0, 0, Math.PI * 2);
+        ctx.stroke();
       }
       ctx.globalAlpha = 1;
       raf = requestAnimationFrame(step);
