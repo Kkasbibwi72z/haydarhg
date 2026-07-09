@@ -13,6 +13,7 @@
     --ink-soft: #46545c;
     --line: #c3ccc9;
     --accent: #0c93b4;
+    --accent-bright: #3ecdeb;
     --accent-ink: #ffffff;
     --mist: #8fa3ab;
     --hero-dirty: #4a4238;
@@ -58,6 +59,7 @@
   }
 
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   html, body { margin: 0; padding: 0; }
   body {
     background: var(--bg);
@@ -66,6 +68,7 @@
     line-height: 1.6;
     font-size: 17px;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
   .display {
     font-family: "Arial Black", "Arial Bold", Arial, sans-serif;
@@ -94,11 +97,25 @@
     outline-offset: 3px;
   }
 
+  /* ---------- Scroll reveal ---------- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal.d1 { transition-delay: 0.1s; }
+  .reveal.d2 { transition-delay: 0.2s; }
+  .reveal.d3 { transition-delay: 0.3s; }
+
   /* ---------- Header ---------- */
   header {
-    position: sticky; top: 0; z-index: 50;
-    background: var(--bg);
-    border-bottom: 1px solid var(--line);
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    background: rgba(8, 14, 18, 0.55);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    transition: background 0.4s;
   }
   .nav {
     display: flex; align-items: center; justify-content: space-between;
@@ -106,61 +123,120 @@
   }
   .brand {
     display: flex; align-items: baseline; gap: 10px;
-    text-decoration: none; color: var(--ink);
+    text-decoration: none; color: #eef6f8;
   }
   .brand .display { font-size: 18px; letter-spacing: 0.02em; }
-  .brand .mono { font-size: 11px; color: var(--accent); letter-spacing: 0.18em; }
+  .brand .mono { font-size: 11px; color: var(--accent-bright); letter-spacing: 0.18em; }
   .nav-links { display: flex; gap: 22px; }
   .nav-links a {
-    color: var(--ink-soft); text-decoration: none; font-size: 14px;
+    color: rgba(238,246,248,0.75); text-decoration: none; font-size: 14px;
     text-transform: uppercase; letter-spacing: 0.08em;
   }
-  .nav-links a:hover { color: var(--accent); }
+  .nav-links a:hover { color: var(--accent-bright); }
   @media (max-width: 640px) { .nav-links { display: none; } }
 
-  /* ---------- Hero ---------- */
-  .hero { border-bottom: 1px solid var(--line); }
-  .hero-inner {
-    display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px;
-    align-items: center; padding: 72px 24px 64px;
-    max-width: 1100px; margin: 0 auto;
+  /* ---------- Cinematic hero (deliberately dark in both themes: wet asphalt at night) ---------- */
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex; align-items: center;
+    background: #080e12;
+    color: #eef6f8;
+    overflow: hidden;
   }
-  @media (max-width: 900px) { .hero-inner { grid-template-columns: 1fr; padding-top: 48px; } }
-  .hero h1 { font-size: clamp(44px, 6.5vw, 76px); margin: 0 0 22px; }
-  .hero h1 .jet { color: var(--accent); }
+  #heroFx { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .hero::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(120% 90% at 50% 110%, rgba(8,14,18,0) 55%, rgba(8,14,18,0.85) 100%),
+      linear-gradient(180deg, rgba(8,14,18,0.55) 0%, rgba(8,14,18,0) 30%);
+  }
+  .hero-content {
+    position: relative; z-index: 2;
+    max-width: 1100px; margin: 0 auto; padding: 120px 24px 90px;
+    width: 100%;
+  }
+  .hero h1 {
+    font-size: clamp(48px, 8vw, 104px); margin: 0 0 24px;
+    text-shadow: 0 4px 40px rgba(0,0,0,0.6);
+  }
+  .hero h1 .jet {
+    color: var(--accent-bright);
+    text-shadow: 0 0 34px rgba(62,205,235,0.55);
+  }
   .hero p.lede {
-    font-size: 19px; color: var(--ink-soft); max-width: 34em; margin: 0 0 30px;
+    font-size: clamp(17px, 2vw, 20px); color: rgba(238,246,248,0.82);
+    max-width: 32em; margin: 0 0 34px;
+  }
+  .hero-stage { opacity: 0; transform: translateY(30px); }
+  .hero-play .hero-stage {
+    animation: heroUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .hero-play .hero-stage.s2 { animation-delay: 0.25s; }
+  .hero-play .hero-stage.s3 { animation-delay: 0.5s; }
+  .hero-play .hero-stage.s4 { animation-delay: 0.75s; }
+  @keyframes heroUp { to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-stage { opacity: 1; transform: none; animation: none !important; }
   }
   .cta-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
   .btn {
-    display: inline-block; padding: 15px 28px; text-decoration: none;
+    display: inline-block; padding: 16px 30px; text-decoration: none;
     font-family: "Arial Black", Arial, sans-serif; font-weight: 900;
     text-transform: uppercase; letter-spacing: 0.06em; font-size: 15px;
-    background: var(--accent); color: var(--accent-ink);
-    border: 2px solid var(--accent);
+    background: var(--accent-bright); color: #06222c;
+    border: 2px solid var(--accent-bright);
+    transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s;
   }
-  .btn:hover { filter: brightness(1.08); }
-  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--ink); }
-  .btn.ghost:hover { border-color: var(--accent); color: var(--accent); filter: none; }
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(62,205,235,0.35);
+  }
+  .hero .btn.ghost {
+    background: transparent; color: #eef6f8; border-color: rgba(238,246,248,0.5);
+  }
+  .hero .btn.ghost:hover { border-color: var(--accent-bright); color: var(--accent-bright); box-shadow: none; }
   .specs {
-    display: flex; gap: 28px; margin-top: 38px; padding-top: 22px;
-    border-top: 1px solid var(--line); flex-wrap: wrap;
+    display: flex; gap: 34px; margin-top: 44px; padding-top: 24px;
+    border-top: 1px solid rgba(238,246,248,0.18); flex-wrap: wrap;
   }
-  .spec .mono { font-size: 22px; font-weight: 700; color: var(--ink); display: block; }
-  .spec span:last-child { font-size: 12.5px; color: var(--mist); text-transform: uppercase; letter-spacing: 0.1em; }
+  .spec .mono { font-size: 24px; font-weight: 700; color: #eef6f8; display: block; }
+  .spec span:last-child { font-size: 12.5px; color: rgba(238,246,248,0.5); text-transform: uppercase; letter-spacing: 0.1em; }
+  .scroll-hint {
+    position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%);
+    z-index: 2; color: rgba(238,246,248,0.55); font-size: 11px;
+    letter-spacing: 0.3em; text-transform: uppercase;
+    font-family: ui-monospace, Menlo, monospace;
+    animation: hintFloat 2.4s ease-in-out infinite;
+  }
+  @keyframes hintFloat {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(7px); }
+  }
+  @media (prefers-reduced-motion: reduce) { .scroll-hint { animation: none; } }
 
-  /* Before/after slider */
+  /* ---------- Sections ---------- */
+  section { padding: 96px 0; border-bottom: 1px solid var(--line); }
+  section h2 { font-size: clamp(30px, 4vw, 48px); margin: 0 0 18px; }
+  .section-intro { color: var(--ink-soft); max-width: 40em; margin: 0 0 46px; }
+
+  /* Before/after showcase */
+  #vergleich { background: var(--bg); }
+  .ba-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 48px; align-items: center; }
+  @media (max-width: 900px) { .ba-grid { grid-template-columns: 1fr; } }
   .ba {
-    position: relative; aspect-ratio: 4 / 3; overflow: hidden;
+    position: relative; aspect-ratio: 16 / 10; overflow: hidden;
     border: 1px solid var(--line); background: var(--hero-clean);
     user-select: none;
+    box-shadow: 0 30px 60px -30px rgba(10, 40, 50, 0.35);
   }
   .ba canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .ba .dirty { clip-path: inset(0 calc(100% - var(--pos, 55%)) 0 0); }
   .ba-handle {
     position: absolute; top: 0; bottom: 0; left: var(--pos, 55%);
-    width: 3px; background: var(--accent); transform: translateX(-50%);
+    width: 3px; background: var(--accent-bright); transform: translateX(-50%);
     pointer-events: none;
+    box-shadow: 0 0 18px rgba(62,205,235,0.7);
   }
   .ba-handle::after {
     content: "◂ ▸"; position: absolute; top: 50%; left: 50%;
@@ -182,12 +258,7 @@
   }
   .ba-label.before { left: 12px; }
   .ba-label.after { right: 12px; }
-  .ba-caption { font-size: 13px; color: var(--mist); margin-top: 10px; }
-
-  /* ---------- Sections ---------- */
-  section { padding: 76px 0; border-bottom: 1px solid var(--line); }
-  section h2 { font-size: clamp(30px, 4vw, 44px); margin: 0 0 18px; }
-  .section-intro { color: var(--ink-soft); max-width: 40em; margin: 0 0 42px; }
+  .ba-caption { font-size: 13px; color: var(--mist); margin-top: 12px; }
 
   .services {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
@@ -195,8 +266,18 @@
   }
   @media (max-width: 900px) { .services { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 560px) { .services { grid-template-columns: 1fr; } }
-  .service { background: var(--bg-raised); padding: 26px 24px 30px; }
-  .service:hover { background: color-mix(in srgb, var(--accent) 7%, var(--bg-raised)); }
+  .service {
+    background: var(--bg-raised); padding: 28px 24px 32px;
+    position: relative; overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  .service::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--accent); transform: scaleY(0); transform-origin: top;
+    transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+  }
+  .service:hover { transform: translateY(-3px); }
+  .service:hover::before { transform: scaleY(1); }
   .service .mono { font-size: 11px; color: var(--accent); letter-spacing: 0.18em; }
   .service h3 {
     font-family: "Arial Black", Arial, sans-serif; text-transform: uppercase;
@@ -223,11 +304,18 @@
   .usp strong { display: block; }
   .usp span { color: var(--ink-soft); font-size: 15px; }
 
-  /* ---------- Contact ---------- */
+  /* ---------- Contact — ambient droplet canvas behind ---------- */
+  #kontakt { position: relative; overflow: hidden; }
+  #dropFx {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    display: block; pointer-events: none; opacity: 0.5;
+  }
+  #kontakt .wrap { position: relative; z-index: 1; }
   .contact-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px; }
   @media (max-width: 800px) { .contact-grid { grid-template-columns: 1fr; } }
   .contact-card {
     background: var(--bg-raised); border: 1px solid var(--line); padding: 28px;
+    box-shadow: 0 24px 50px -30px rgba(10, 40, 50, 0.3);
   }
   .contact-card dt {
     font-family: ui-monospace, Menlo, monospace; font-size: 11px;
@@ -242,7 +330,9 @@
   .footer-row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 
   @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; animation: none !important; }
+    html { scroll-behavior: auto; }
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .service, .btn { transition: none; }
   }
 </style>
 </head>
@@ -255,6 +345,7 @@
       <span class="mono">HOCHDRUCK&shy;REINIGUNG</span>
     </a>
     <div class="nav-links">
+      <a href="#vergleich">Vorher / Nachher</a>
       <a href="#leistungen">Leistungen</a>
       <a href="#ablauf">Ablauf</a>
       <a href="#kontakt">Kontakt</a>
@@ -263,51 +354,66 @@
 </header>
 
 <main id="top">
-  <div class="hero">
-    <div class="hero-inner">
-      <div>
-        <p class="eyebrow">Professionelle Flächenreinigung · 250 bar</p>
-        <h1 class="display">Schmutz hat<br>keine <span class="jet">Chance.</span></h1>
-        <p class="lede">
-          Wir bringen Terrassen, Einfahrten, Fassaden und Pflasterflächen zurück in
-          den Neuzustand — mit professioneller Hochdrucktechnik, schonend fürs
-          Material und mit sauberem Ergebnis beim ersten Termin.
-        </p>
-        <div class="cta-row">
-          <a class="btn" href="#kontakt">Kostenloses Angebot</a>
-          <a class="btn ghost" href="#leistungen">Leistungen ansehen</a>
-        </div>
-        <div class="specs">
-          <div class="spec"><span class="mono">250&nbsp;bar</span><span>Arbeitsdruck</span></div>
-          <div class="spec"><span class="mono">500+</span><span>Gereinigte Flächen</span></div>
-          <div class="spec"><span class="mono">100&nbsp;%</span><span>Festpreis-Garantie</span></div>
-        </div>
+  <div class="hero" id="hero">
+    <canvas id="heroFx" aria-hidden="true"></canvas>
+    <div class="hero-content">
+      <p class="eyebrow hero-stage">Professionelle Flächenreinigung · 250 bar</p>
+      <h1 class="display hero-stage s2">Schmutz hat<br>keine <span class="jet">Chance.</span></h1>
+      <p class="lede hero-stage s3">
+        Wir bringen Terrassen, Einfahrten, Fassaden und Pflasterflächen zurück in
+        den Neuzustand — mit professioneller Hochdrucktechnik, schonend fürs
+        Material und mit sauberem Ergebnis beim ersten Termin.
+      </p>
+      <div class="cta-row hero-stage s4">
+        <a class="btn" href="#kontakt">Kostenloses Angebot</a>
+        <a class="btn ghost" href="#vergleich">Ergebnis ansehen</a>
       </div>
-      <div>
-        <div class="ba" id="ba" style="--pos: 55%;">
-          <canvas class="clean" id="cvClean" aria-hidden="true"></canvas>
-          <canvas class="dirty" id="cvDirty" aria-hidden="true"></canvas>
-          <div class="ba-handle" aria-hidden="true"></div>
-          <span class="ba-label before" aria-hidden="true">VORHER</span>
-          <span class="ba-label after" aria-hidden="true">NACHHER</span>
-          <input type="range" id="baRange" min="0" max="100" value="55" step="0.5"
-                 aria-label="Vorher-Nachher-Vergleich: Regler ziehen, um die gereinigte Fläche freizulegen">
-        </div>
-        <p class="ba-caption mono">↔ Regler ziehen: so arbeitet Hochdruck.</p>
+      <div class="specs hero-stage s4">
+        <div class="spec"><span class="mono">250&nbsp;bar</span><span>Arbeitsdruck</span></div>
+        <div class="spec"><span class="mono">500+</span><span>Gereinigte Flächen</span></div>
+        <div class="spec"><span class="mono">100&nbsp;%</span><span>Festpreis-Garantie</span></div>
       </div>
     </div>
+    <span class="scroll-hint" aria-hidden="true">▼ Scrollen</span>
   </div>
+
+  <section id="vergleich">
+    <div class="wrap">
+      <div class="ba-grid">
+        <div class="reveal">
+          <p class="eyebrow">Vorher / Nachher</p>
+          <h2 class="display">Sehen Sie den Unterschied</h2>
+          <p class="section-intro" style="margin-bottom:0;">
+            Jahre von Moos, Algen und Verwitterung — weg in einem Termin.
+            Ziehen Sie den Regler und legen Sie die Fläche selbst frei.
+          </p>
+        </div>
+        <div class="reveal d1">
+          <div class="ba" id="ba" style="--pos: 2%;">
+            <canvas class="clean" id="cvClean" aria-hidden="true"></canvas>
+            <canvas class="dirty" id="cvDirty" aria-hidden="true"></canvas>
+            <div class="ba-handle" aria-hidden="true"></div>
+            <span class="ba-label before" aria-hidden="true">VORHER</span>
+            <span class="ba-label after" aria-hidden="true">NACHHER</span>
+            <input type="range" id="baRange" min="0" max="100" value="2" step="0.5"
+                   aria-label="Vorher-Nachher-Vergleich: Regler ziehen, um die gereinigte Fläche freizulegen">
+          </div>
+          <p class="ba-caption mono">↔ Regler ziehen: so arbeitet Hochdruck.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <section id="leistungen">
     <div class="wrap">
-      <p class="eyebrow">Leistungen</p>
-      <h2 class="display">Was wir sauber machen</h2>
-      <p class="section-intro">
+      <p class="eyebrow reveal">Leistungen</p>
+      <h2 class="display reveal">Was wir sauber machen</h2>
+      <p class="section-intro reveal d1">
         Jede Oberfläche braucht den richtigen Druck, die richtige Düse und das
         richtige Verfahren. Wir stimmen die Technik auf Ihr Material ab — von
         empfindlichem Naturstein bis zu robustem Beton.
       </p>
-      <div class="services">
+      <div class="services reveal d1">
         <div class="service">
           <span class="mono">FLÄCHE</span>
           <h3>Terrassen &amp; Wege</h3>
@@ -344,20 +450,20 @@
 
   <section id="ablauf">
     <div class="wrap">
-      <p class="eyebrow">Ablauf</p>
-      <h2 class="display">In drei Schritten sauber</h2>
-      <div class="steps">
-        <div class="step">
+      <p class="eyebrow reveal">Ablauf</p>
+      <h2 class="display reveal">In drei Schritten sauber</h2>
+      <div class="steps" style="margin-top:42px;">
+        <div class="step reveal">
           <span class="mono">1</span>
           <h3>Anfrage &amp; Besichtigung</h3>
           <p>Sie schicken uns Fotos oder wir kommen kurz vorbei. Sie erhalten ein Festpreisangebot — kostenlos und unverbindlich.</p>
         </div>
-        <div class="step">
+        <div class="step reveal d1">
           <span class="mono">2</span>
           <h3>Reinigung vor Ort</h3>
           <p>Wir bringen Technik und Wasser­anschluss-Equipment mit, decken Empfindliches ab und reinigen gründlich in einem Termin.</p>
         </div>
-        <div class="step">
+        <div class="step reveal d2">
           <span class="mono">3</span>
           <h3>Abnahme &amp; Schutz</h3>
           <p>Gemeinsame Abnahme im Hellen. Auf Wunsch versiegeln wir die Fläche, damit das Ergebnis deutlich länger hält.</p>
@@ -368,13 +474,13 @@
 
   <section id="warum">
     <div class="wrap">
-      <p class="eyebrow">Warum wir</p>
-      <h2 class="display">Gründlich statt grob</h2>
-      <p class="section-intro">
+      <p class="eyebrow reveal">Warum wir</p>
+      <h2 class="display reveal">Gründlich statt grob</h2>
+      <p class="section-intro reveal d1">
         Hochdruck ist kein Selbstzweck. Falscher Druck ruiniert Fugen, Holz und
         Putz — richtiger Druck macht Flächen wie neu.
       </p>
-      <div class="usps">
+      <div class="usps reveal d1">
         <div class="usp"><div><strong>Materialschonende Verfahren</strong><span>Druck, Düse und Temperatur passend zur Oberfläche — keine Fräserschäden.</span></div></div>
         <div class="usp"><div><strong>Festpreis vor Beginn</strong><span>Das Angebot gilt. Keine Überraschungen auf der Rechnung.</span></div></div>
         <div class="usp"><div><strong>Versichert &amp; angemeldet</strong><span>Betriebshaftpflicht inklusive — für Privat- und Gewerbekunden.</span></div></div>
@@ -384,9 +490,10 @@
   </section>
 
   <section id="kontakt">
+    <canvas id="dropFx" aria-hidden="true"></canvas>
     <div class="wrap">
       <div class="contact-grid">
-        <div>
+        <div class="reveal">
           <p class="eyebrow">Kontakt</p>
           <h2 class="display">Angebot in 24&nbsp;h</h2>
           <p class="section-intro">
@@ -394,9 +501,9 @@
             bekommen innerhalb eines Werktages ein Festpreisangebot. Oder rufen
             Sie einfach an.
           </p>
-          <a class="btn" href="mailto:haydaalabasi27@gmail.com?subject=Anfrage%20Hochdruckreinigung">E-Mail-Anfrage senden</a>
+          <a class="btn" href="mailto:haydaalabasi27@gmail.com?subject=Anfrage%20Hochdruckreinigung" style="background:var(--accent);border-color:var(--accent);color:var(--accent-ink);">E-Mail-Anfrage senden</a>
         </div>
-        <div class="contact-card">
+        <div class="contact-card reveal d1">
           <dl>
             <dt>Telefon</dt>
             <dd><a href="tel:+490000000000">+49 (0) 000 000 00 00</a></dd>
@@ -422,15 +529,13 @@
 
 <script>
 (function () {
-  var ba = document.getElementById('ba');
-  var range = document.getElementById('baRange');
-  var cvClean = document.getElementById('cvClean');
-  var cvDirty = document.getElementById('cvDirty');
+  'use strict';
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var DPR = Math.min(window.devicePixelRatio || 1, 3); // sharp up to 4K/retina
 
-  range.addEventListener('input', function () {
-    ba.style.setProperty('--pos', range.value + '%');
-  });
-
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
   function mulberry32(seed) {
     return function () {
       seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
@@ -440,97 +545,407 @@
     };
   }
 
-  function cssVar(name) {
-    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  }
+  /* ================= HERO: high-pressure water jet ================= */
+  (function heroJet() {
+    var cv = document.getElementById('heroFx');
+    var ctx = cv.getContext('2d');
+    var W = 0, H = 0, ground = 0;
+    var particles = [];
+    var mist = [];
+    var t = 0;
 
-  function drawSlabs(ctx, w, h, base, jointColor, painter) {
-    ctx.fillStyle = base;
-    ctx.fillRect(0, 0, w, h);
-    var cols = 4, rows = 3;
-    var cw = w / cols, ch = h / rows;
-    // per-slab tone variation + texture
-    var rnd = mulberry32(7);
-    for (var r = 0; r < rows; r++) {
-      for (var c = 0; c < cols; c++) {
-        painter(ctx, c * cw, r * ch, cw, ch, rnd);
+    function resize() {
+      var r = cv.getBoundingClientRect();
+      W = Math.max(1, Math.round(r.width * DPR));
+      H = Math.max(1, Math.round(r.height * DPR));
+      cv.width = W; cv.height = H;
+      ground = H * 0.86;
+      drawStatic();
+    }
+
+    function drawStatic() {
+      // wet asphalt: dark gradient ground with a cyan sheen strip + speckle
+      var g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#0a1116');
+      g.addColorStop(0.62, '#0c141a');
+      g.addColorStop(0.86, '#101c23');
+      g.addColorStop(1, '#0a1218');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+      // ground plane
+      var gg = ctx.createLinearGradient(0, ground, 0, H);
+      gg.addColorStop(0, '#16242c');
+      gg.addColorStop(1, '#0b1319');
+      ctx.fillStyle = gg;
+      ctx.fillRect(0, ground, W, H - ground);
+      // wet reflections on ground
+      var rnd = mulberry32(42);
+      for (var i = 0; i < 90; i++) {
+        var x = rnd() * W, y = ground + rnd() * (H - ground);
+        ctx.fillStyle = 'rgba(120,200,220,' + (0.02 + rnd() * 0.06) + ')';
+        ctx.fillRect(x, y, (10 + rnd() * 90) * DPR / 2, DPR);
       }
-    }
-    // joints
-    ctx.strokeStyle = jointColor;
-    ctx.lineWidth = Math.max(2, w * 0.006);
-    for (var i = 1; i < cols; i++) {
-      ctx.beginPath(); ctx.moveTo(i * cw, 0); ctx.lineTo(i * cw, h); ctx.stroke();
-    }
-    for (var j = 1; j < rows; j++) {
-      ctx.beginPath(); ctx.moveTo(0, j * ch); ctx.lineTo(w, j * ch); ctx.stroke();
-    }
-  }
-
-  function speckle(ctx, x, y, w, h, rnd, colors, count, maxR) {
-    for (var i = 0; i < count; i++) {
-      ctx.fillStyle = colors[(rnd() * colors.length) | 0];
-      ctx.globalAlpha = 0.12 + rnd() * 0.25;
-      var r = 0.5 + rnd() * maxR;
-      ctx.beginPath();
-      ctx.arc(x + rnd() * w, y + rnd() * h, r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  function render() {
-    var rect = ba.getBoundingClientRect();
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var w = Math.max(1, Math.round(rect.width * dpr));
-    var h = Math.max(1, Math.round(rect.height * dpr));
-    [cvClean, cvDirty].forEach(function (cv) { cv.width = w; cv.height = h; });
-
-    var clean = cvClean.getContext('2d');
-    var dirty = cvDirty.getContext('2d');
-    var cleanBase = cssVar('--hero-clean') || '#d7dcda';
-    var dirtyBase = cssVar('--hero-dirty') || '#4a4238';
-
-    // NACHHER: bright, even concrete with fine speckle
-    drawSlabs(clean, w, h, cleanBase, 'rgba(0,0,0,0.28)', function (ctx, x, y, cw, ch, rnd) {
-      ctx.fillStyle = 'rgba(255,255,255,' + (0.03 + rnd() * 0.07) + ')';
-      ctx.fillRect(x, y, cw, ch);
-      speckle(ctx, x, y, cw, ch, rnd, ['#9aa5a1', '#c2cac6', '#ffffff'], 220, 1.4 * dpr);
-    });
-
-    // VORHER: grimy, mossy, stained
-    drawSlabs(dirty, w, h, dirtyBase, 'rgba(0,0,0,0.5)', function (ctx, x, y, cw, ch, rnd) {
-      ctx.fillStyle = 'rgba(0,0,0,' + (0.05 + rnd() * 0.16) + ')';
-      ctx.fillRect(x, y, cw, ch);
-      speckle(ctx, x, y, cw, ch, rnd, ['#2f2a22', '#5a5245', '#3d4a2e'], 260, 1.6 * dpr);
-      // moss patches near joints
-      for (var m = 0; m < 4; m++) {
-        ctx.fillStyle = 'rgba(76,92,52,' + (0.25 + rnd() * 0.3) + ')';
-        var mx = x + rnd() * cw, my = y + rnd() * ch;
+      // distant haze speckle
+      for (var j = 0; j < 160; j++) {
+        ctx.fillStyle = 'rgba(160,200,215,' + (rnd() * 0.05) + ')';
         ctx.beginPath();
-        ctx.ellipse(mx, my, (6 + rnd() * 26) * dpr, (4 + rnd() * 14) * dpr, rnd() * Math.PI, 0, Math.PI * 2);
+        ctx.arc(rnd() * W, rnd() * ground, rnd() * 1.4 * DPR, 0, Math.PI * 2);
         ctx.fill();
       }
-      // dark stains
-      if (rnd() > 0.55) {
-        var g = ctx.createRadialGradient(x + cw / 2, y + ch / 2, 2, x + cw / 2, y + ch / 2, cw * 0.5);
-        g.addColorStop(0, 'rgba(20,16,10,0.4)');
-        g.addColorStop(1, 'rgba(20,16,10,0)');
-        ctx.fillStyle = g;
-        ctx.fillRect(x, y, cw, ch);
-      }
-    });
-  }
+    }
 
-  render();
-  var t;
-  window.addEventListener('resize', function () {
-    clearTimeout(t); t = setTimeout(render, 150);
-  });
-  var mq = window.matchMedia('(prefers-color-scheme: dark)');
-  if (mq.addEventListener) mq.addEventListener('change', render);
-  new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    function nozzle() {
+      // lance tip lower right, sweeping slowly
+      var sweep = Math.sin(t * 0.011) * 0.12;
+      return {
+        x: W * 0.86,
+        y: H * 0.74,
+        a: Math.PI + 0.32 + sweep  // pointing left, slightly down
+      };
+    }
+
+    function spawn() {
+      var n = nozzle();
+      var count = 26;
+      for (var i = 0; i < count; i++) {
+        var spread = (Math.random() - 0.5) * 0.14;
+        var speed = (16 + Math.random() * 14) * DPR;
+        particles.push({
+          x: n.x, y: n.y,
+          vx: Math.cos(n.a + spread) * speed,
+          vy: Math.sin(n.a + spread) * speed,
+          life: 1,
+          decay: 0.012 + Math.random() * 0.02,
+          r: (0.8 + Math.random() * 2.2) * DPR,
+          splash: false
+        });
+      }
+      if (mist.length < 26 && Math.random() > 0.6) {
+        mist.push({
+          x: n.x - Math.random() * W * 0.5,
+          y: n.y - Math.random() * H * 0.2,
+          r: (30 + Math.random() * 90) * DPR,
+          vx: -(0.3 + Math.random() * 0.7) * DPR,
+          vy: -(0.05 + Math.random() * 0.25) * DPR,
+          life: 1,
+          decay: 0.003 + Math.random() * 0.004
+        });
+      }
+      if (particles.length > 1600) particles.splice(0, particles.length - 1600);
+    }
+
+    function step() {
+      t++;
+      spawn();
+      drawStatic();
+
+      // mist first (soft, behind jet)
+      ctx.globalCompositeOperation = 'lighter';
+      for (var m = mist.length - 1; m >= 0; m--) {
+        var f = mist[m];
+        f.x += f.vx; f.y += f.vy; f.life -= f.decay;
+        if (f.life <= 0) { mist.splice(m, 1); continue; }
+        var mg = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r);
+        mg.addColorStop(0, 'rgba(140,215,235,' + (0.05 * f.life) + ')');
+        mg.addColorStop(1, 'rgba(140,215,235,0)');
+        ctx.fillStyle = mg;
+        ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // jet particles
+      var grav = 0.32 * DPR;
+      for (var i = particles.length - 1; i >= 0; i--) {
+        var p = particles[i];
+        p.x += p.vx; p.y += p.vy;
+        p.vy += grav; p.vx *= 0.992;
+        p.life -= p.decay;
+        if (!p.splash && p.y >= ground) {
+          // splash: bounce up as fine spray
+          p.splash = true;
+          p.y = ground;
+          p.vy = -Math.abs(p.vy) * (0.15 + Math.random() * 0.25);
+          p.vx *= 0.4 + Math.random() * 0.3;
+          p.life = Math.min(p.life, 0.5);
+          p.r *= 0.7;
+        }
+        if (p.life <= 0 || p.x < -50 || p.y > H + 50) { particles.splice(i, 1); continue; }
+        var a = p.life;
+        var core = p.splash ? 'rgba(200,240,250,' : 'rgba(225,248,255,';
+        ctx.fillStyle = core + (a * 0.85) + ')';
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+        if (!p.splash) {
+          // glow trail
+          ctx.strokeStyle = 'rgba(62,205,235,' + (a * 0.28) + ')';
+          ctx.lineWidth = p.r * 0.9;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x - p.vx * 1.6, p.y - p.vy * 1.6);
+          ctx.stroke();
+        }
+      }
+
+      // nozzle glow + lance
+      var n = nozzle();
+      var ng = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, 60 * DPR);
+      ng.addColorStop(0, 'rgba(180,235,250,0.55)');
+      ng.addColorStop(1, 'rgba(180,235,250,0)');
+      ctx.fillStyle = ng;
+      ctx.beginPath(); ctx.arc(n.x, n.y, 60 * DPR, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      // lance silhouette
+      ctx.strokeStyle = '#1d2c35';
+      ctx.lineWidth = 7 * DPR;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(n.x, n.y);
+      ctx.lineTo(n.x - Math.cos(n.a) * -90 * DPR, n.y - Math.sin(n.a) * -90 * DPR);
+      ctx.stroke();
+
+      raf = requestAnimationFrame(step);
+    }
+
+    var raf = null;
+    var running = false;
+    function start() {
+      if (running || reducedMotion) return;
+      running = true;
+      raf = requestAnimationFrame(step);
+    }
+    function stop() {
+      running = false;
+      if (raf) cancelAnimationFrame(raf);
+    }
+
+    resize();
+    if (reducedMotion) {
+      // static frame with a painted jet cone
+      var n = nozzle();
+      ctx.globalCompositeOperation = 'lighter';
+      var jg = ctx.createLinearGradient(n.x, n.y, W * 0.2, ground);
+      jg.addColorStop(0, 'rgba(200,240,252,0.5)');
+      jg.addColorStop(1, 'rgba(200,240,252,0)');
+      ctx.fillStyle = jg;
+      ctx.beginPath();
+      ctx.moveTo(n.x, n.y);
+      ctx.lineTo(W * 0.18, ground - 8 * DPR);
+      ctx.lineTo(W * 0.3, ground + 6 * DPR);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    } else {
+      start();
+      // pause when hero is offscreen (battery + perf)
+      new IntersectionObserver(function (entries) {
+        entries[0].isIntersecting ? start() : stop();
+      }, { threshold: 0.05 }).observe(cv);
+    }
+    var rt;
+    window.addEventListener('resize', function () {
+      clearTimeout(rt); rt = setTimeout(resize, 150);
+    });
+    // headline entrance
+    requestAnimationFrame(function () {
+      document.getElementById('hero').classList.add('hero-play');
+    });
+  })();
+
+  /* ================= Before/after slider + auto-wash ================= */
+  (function beforeAfter() {
+    var ba = document.getElementById('ba');
+    var range = document.getElementById('baRange');
+    var cvClean = document.getElementById('cvClean');
+    var cvDirty = document.getElementById('cvDirty');
+    var userTouched = false;
+
+    range.addEventListener('input', function () {
+      userTouched = true;
+      ba.style.setProperty('--pos', range.value + '%');
+    });
+
+    function drawSlabs(ctx, w, h, base, jointColor, painter) {
+      ctx.fillStyle = base;
+      ctx.fillRect(0, 0, w, h);
+      var cols = 4, rows = 3;
+      var cw = w / cols, ch = h / rows;
+      var rnd = mulberry32(7);
+      for (var r = 0; r < rows; r++) {
+        for (var c = 0; c < cols; c++) {
+          painter(ctx, c * cw, r * ch, cw, ch, rnd);
+        }
+      }
+      ctx.strokeStyle = jointColor;
+      ctx.lineWidth = Math.max(2, w * 0.006);
+      for (var i = 1; i < cols; i++) {
+        ctx.beginPath(); ctx.moveTo(i * cw, 0); ctx.lineTo(i * cw, h); ctx.stroke();
+      }
+      for (var j = 1; j < rows; j++) {
+        ctx.beginPath(); ctx.moveTo(0, j * ch); ctx.lineTo(w, j * ch); ctx.stroke();
+      }
+    }
+
+    function speckle(ctx, x, y, w, h, rnd, colors, count, maxR) {
+      for (var i = 0; i < count; i++) {
+        ctx.fillStyle = colors[(rnd() * colors.length) | 0];
+        ctx.globalAlpha = 0.12 + rnd() * 0.25;
+        var r = 0.5 + rnd() * maxR;
+        ctx.beginPath();
+        ctx.arc(x + rnd() * w, y + rnd() * h, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function render() {
+      var rect = ba.getBoundingClientRect();
+      var w = Math.max(1, Math.round(rect.width * DPR));
+      var h = Math.max(1, Math.round(rect.height * DPR));
+      [cvClean, cvDirty].forEach(function (cv) { cv.width = w; cv.height = h; });
+
+      var clean = cvClean.getContext('2d');
+      var dirty = cvDirty.getContext('2d');
+      var cleanBase = cssVar('--hero-clean') || '#d7dcda';
+      var dirtyBase = cssVar('--hero-dirty') || '#4a4238';
+
+      drawSlabs(clean, w, h, cleanBase, 'rgba(0,0,0,0.28)', function (ctx, x, y, cw, ch, rnd) {
+        ctx.fillStyle = 'rgba(255,255,255,' + (0.03 + rnd() * 0.07) + ')';
+        ctx.fillRect(x, y, cw, ch);
+        speckle(ctx, x, y, cw, ch, rnd, ['#9aa5a1', '#c2cac6', '#ffffff'], 220, 1.4 * DPR);
+      });
+
+      drawSlabs(dirty, w, h, dirtyBase, 'rgba(0,0,0,0.5)', function (ctx, x, y, cw, ch, rnd) {
+        ctx.fillStyle = 'rgba(0,0,0,' + (0.05 + rnd() * 0.16) + ')';
+        ctx.fillRect(x, y, cw, ch);
+        speckle(ctx, x, y, cw, ch, rnd, ['#2f2a22', '#5a5245', '#3d4a2e'], 260, 1.6 * DPR);
+        for (var m = 0; m < 4; m++) {
+          ctx.fillStyle = 'rgba(76,92,52,' + (0.25 + rnd() * 0.3) + ')';
+          var mx = x + rnd() * cw, my = y + rnd() * ch;
+          ctx.beginPath();
+          ctx.ellipse(mx, my, (6 + rnd() * 26) * DPR, (4 + rnd() * 14) * DPR, rnd() * Math.PI, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        if (rnd() > 0.55) {
+          var g = ctx.createRadialGradient(x + cw / 2, y + ch / 2, 2, x + cw / 2, y + ch / 2, cw * 0.5);
+          g.addColorStop(0, 'rgba(20,16,10,0.4)');
+          g.addColorStop(1, 'rgba(20,16,10,0)');
+          ctx.fillStyle = g;
+          ctx.fillRect(x, y, cw, ch);
+        }
+      });
+    }
+
+    // auto-wash: sweep the reveal once when scrolled into view
+    var washed = false;
+    function autoWash() {
+      if (washed || userTouched) return;
+      washed = true;
+      if (reducedMotion) {
+        ba.style.setProperty('--pos', '55%');
+        range.value = 55;
+        return;
+      }
+      var start = null, from = 2, to = 62, dur = 2200;
+      function ease(x) { return 1 - Math.pow(1 - x, 3); }
+      function frame(ts) {
+        if (userTouched) return;
+        if (!start) start = ts;
+        var k = Math.min(1, (ts - start) / dur);
+        var v = from + (to - from) * ease(k);
+        ba.style.setProperty('--pos', v + '%');
+        range.value = v;
+        if (k < 1) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    render();
+    new IntersectionObserver(function (entries) {
+      if (entries[0].isIntersecting) autoWash();
+    }, { threshold: 0.45 }).observe(ba);
+
+    var t;
+    window.addEventListener('resize', function () {
+      clearTimeout(t); t = setTimeout(render, 150);
+    });
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq.addEventListener) mq.addEventListener('change', render);
+    new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  })();
+
+  /* ================= Ambient droplets behind contact ================= */
+  (function droplets() {
+    if (reducedMotion) return;
+    var cv = document.getElementById('dropFx');
+    var ctx = cv.getContext('2d');
+    var W = 0, H = 0, drops = [];
+
+    function resize() {
+      var r = cv.getBoundingClientRect();
+      W = Math.max(1, Math.round(r.width * DPR));
+      H = Math.max(1, Math.round(r.height * DPR));
+      cv.width = W; cv.height = H;
+      drops = [];
+      for (var i = 0; i < 40; i++) {
+        drops.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: (1 + Math.random() * 2.4) * DPR,
+          v: (0.4 + Math.random() * 1.4) * DPR,
+          a: 0.08 + Math.random() * 0.22
+        });
+      }
+    }
+
+    var running = false, raf = null;
+    function step() {
+      ctx.clearRect(0, 0, W, H);
+      var color = cssVar('--accent') || '#0c93b4';
+      for (var i = 0; i < drops.length; i++) {
+        var d = drops[i];
+        d.y += d.v;
+        if (d.y > H + 10) { d.y = -10; d.x = Math.random() * W; }
+        ctx.globalAlpha = d.a;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        // teardrop: circle + small tail
+        ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = d.a * 0.5;
+        ctx.fillRect(d.x - d.r * 0.25, d.y - d.r * 3.2, d.r * 0.5, d.r * 2.6);
+      }
+      ctx.globalAlpha = 1;
+      raf = requestAnimationFrame(step);
+    }
+
+    resize();
+    new IntersectionObserver(function (entries) {
+      if (entries[0].isIntersecting && !running) {
+        running = true; raf = requestAnimationFrame(step);
+      } else if (!entries[0].isIntersecting && running) {
+        running = false; cancelAnimationFrame(raf);
+      }
+    }, { threshold: 0.05 }).observe(cv);
+    var t;
+    window.addEventListener('resize', function () {
+      clearTimeout(t); t = setTimeout(resize, 150);
+    });
+  })();
+
+  /* ================= Scroll reveals ================= */
+  (function reveals() {
+    var els = document.querySelectorAll('.reveal');
+    if (reducedMotion || !('IntersectionObserver' in window)) {
+      els.forEach(function (el) { el.classList.add('in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.18, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(function (el) { io.observe(el); });
+  })();
 })();
 </script>
+
 </body>
 </html>
